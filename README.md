@@ -1,6 +1,6 @@
 # roadster aero lab
 
-atlas web independiente sobre la aerodinámica del tesla roadster, sus prestaciones declaradas y las cotas públicas del roadster 2.5 original.
+secuencia visual interactiva sobre la geometría pública del tesla roadster, su aerodinámica y la escala real del falcon heavy.
 
 [ver sitio](https://kisnner26.github.io/roadster-aero-lab/)
 
@@ -8,11 +8,11 @@ atlas web independiente sobre la aerodinámica del tesla roadster, sus prestacio
 
 ## incluye
 
-- visualización animada y controlable del flujo de aire
-- conversión entre unidades si e imperiales
-- plano vectorial basado en las cotas oficiales del manual roadster 2.5
-- separación explícita entre datos del modelo original y cifras declaradas del nuevo roadster
-- diseño responsive, navegación por teclado y reducción de movimiento
+- cinco escenas automáticas controlables con rueda, flechas o teclado
+- plano vectorial con cotas oficiales del manual roadster 2.5
+- proyecciones lateral, superior y frontal
+- campo de flujo aerodinámico cualitativo
+- comparación a escala real con falcon heavy y escena orbital fh-001
 
 ## desarrollo
 
@@ -33,5 +33,7 @@ npm run build
 - [tesla roadster](https://www.tesla.com/es_es/roadster)
 - [manual del propietario roadster 2.5](https://service.tesla.com/docs/Public/Roadster/Owner/Roadster_2.5_Owners_Manual.pdf)
 - [manual de servicio roadster](https://service.tesla.com/docs/Public/Roadster/ServiceManual/en-us/GUID-4E037ADB-D0F4-48A0-9261-1083193D4C1B.html)
+- [falcon heavy](https://www.spacex.com/vehicles/falcon-heavy/)
+- [falcon user's guide](https://www.spacex.com/assets/media/falcon-users-guide-2025-05-09.pdf)
 
 proyecto educativo no afiliado a tesla, inc. las ilustraciones son reconstrucciones visuales, no archivos cad ni planos de fabricación.
