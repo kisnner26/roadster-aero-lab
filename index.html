@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Atlas visual independiente de la aerodinámica y documentación técnica pública del Tesla Roadster." />
+    <meta name="theme-color" content="#090a0c" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://kisnner26.github.io/roadster-aero-lab/" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <meta property="og:title" content="Roadster Aero Lab" />
+    <meta property="og:description" content="Aerodinámica, prestaciones declaradas y planos públicos del Tesla Roadster." />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_NI" />
+    <meta property="og:url" content="https://kisnner26.github.io/roadster-aero-lab/" />
+    <meta property="og:image" content="https://kisnner26.github.io/roadster-aero-lab/assets/roadster-aero-lab.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Roadster Aero Lab" />
+    <meta name="twitter:description" content="Aerodinámica, prestaciones declaradas y planos públicos del Tesla Roadster." />
+    <meta name="twitter:image" content="https://kisnner26.github.io/roadster-aero-lab/assets/roadster-aero-lab.png" />
+    <title>Roadster Aero Lab</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">ir al contenido</a>
+    <header class="site-header">
+      <a class="brand" href="#inicio" aria-label="Roadster Aero Lab, inicio">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>aero.lab / r—02</span>
+      </a>
+      <nav aria-label="navegación principal">
+        <a href="#flujo">flujo</a>
+        <a href="#archivo">archivo</a>
+        <a href="#fuentes">fuentes</a>
+      </nav>
+      <button class="unit-toggle" type="button" aria-label="usar unidades imperiales" aria-pressed="false">
+        <span class="unit-option is-active">si</span>
+        <span class="unit-option">imperial</span>
+      </button>
+    </header>
+
+    <main id="contenido">
+      <section class="hero" id="inicio" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">atlas aerodinámico independiente · 2026</p>
+          <h1 id="hero-title">velocidad<br /><span>dibujada</span><br />por el aire.</h1>
+          <p class="hero-intro">una lectura visual del roadster: superficie, flujo y datos públicos. sin humo, salvo el del túnel de viento.</p>
+          <a class="square-cta" href="#flujo">
+            <span>explorar flujo</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" /></svg>
+          </a>
+        </div>
+
+        <div class="hero-stage" aria-label="silueta lateral conceptual del Roadster con líneas de flujo animadas">
+          <canvas id="airflow-canvas" aria-hidden="true"></canvas>
+          <svg class="roadster-hero" viewBox="0 0 980 420" role="img" aria-labelledby="car-title car-desc">
+            <title id="car-title">perfil aerodinámico conceptual del Tesla Roadster</title>
+            <desc id="car-desc">silueta vectorial lateral con perfil bajo, pasos de rueda y cola elevada</desc>
+            <defs>
+              <clipPath id="body-clip"><path d="M87 298C149 278 209 257 276 220C335 187 374 139 444 122C536 100 649 120 733 163C779 187 810 222 857 245C878 255 900 262 916 279L899 304L91 306Z" /></clipPath>
+              <linearGradient id="body-shade" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f26445"/><stop offset=".55" stop-color="#bb2e24"/><stop offset="1" stop-color="#5d1112"/></linearGradient>
+            </defs>
+            <path class="car-body" d="M87 298C149 278 209 257 276 220C335 187 374 139 444 122C536 100 649 120 733 163C779 187 810 222 857 245C878 255 900 262 916 279L899 304L91 306Z" />
+            <path class="car-glass" d="M323 207C361 164 396 135 450 124C510 113 581 119 635 134L673 182L360 207Z" />
+            <path class="car-line" d="M91 298C245 289 340 251 476 220C627 185 725 193 858 245" />
+            <path class="car-line is-faint" d="M355 210L317 273M675 183L721 260M460 125L468 219" />
+            <ellipse class="wheel-shadow" cx="285" cy="307" rx="75" ry="17" />
+            <ellipse class="wheel-shadow" cx="748" cy="307" rx="75" ry="17" />
+            <circle class="wheel" cx="285" cy="290" r="66" /><circle class="rim" cx="285" cy="290" r="39" /><circle class="hub" cx="285" cy="290" r="8" />
+            <circle class="wheel" cx="748" cy="290" r="66" /><circle class="rim" cx="748" cy="290" r="39" /><circle class="hub" cx="748" cy="290" r="8" />
+            <g class="measurement">
+              <path d="M88 364H915M88 354v20M915 354v20" />
+              <text x="501" y="391" text-anchor="middle">perfil conceptual · no a escala</text>
+            </g>
+          </svg>
+          <div class="stage-note stage-note--front"><span>01</span> entrada de baja presión</div>
+          <div class="stage-note stage-note--rear"><span>02</span> separación controlada</div>
+          <div class="speed-readout" aria-label="velocidad máxima declarada superior a 400 kilómetros por hora">
+            <span class="speed-value" data-si="400+" data-imperial="250+">400+</span>
+            <span class="speed-unit" data-si="km/h" data-imperial="mph">km/h</span>
+            <small>velocidad declarada</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="manifesto" aria-label="principio aerodinámico">
+        <p>el aire no ve un auto.</p>
+        <p>ve <em>presión, curvatura y tiempo.</em></p>
+      </section>
+
+      <section class="flow-section" id="flujo" aria-labelledby="flow-title">
+        <div class="section-index"><span>01</span><span>flujo</span></div>
+        <div class="flow-content">
+          <header class="section-heading">
+            <p class="eyebrow">lectura de superficie</p>
+            <h2 id="flow-title">tres zonas.<br />una sola corriente.</h2>
+            <p>mueve el control para cambiar el régimen visual. es una demostración cualitativa, no una simulación cfd.</p>
+          </header>
+
+          <div class="flow-lab">
+            <div class="flow-viz" aria-hidden="true">
+              <div class="flow-grid"></div>
+              <svg viewBox="0 0 900 330">
+                <path class="flow-body" d="M119 231C207 220 271 190 343 139C388 107 452 89 532 94C614 99 664 129 718 170C749 193 789 208 831 218L821 239H123Z" />
+                <path class="flow-glass" d="M352 135C401 102 446 93 513 95C564 96 604 106 639 125L665 159H323Z" />
+                <circle cx="307" cy="231" r="48" /><circle cx="710" cy="231" r="48" />
+                <g class="streamlines">
+                  <path d="M-40 73C194 73 241 85 320 80C408 75 462 47 554 54C676 63 740 107 940 101" />
+                  <path d="M-40 111C187 111 239 121 312 113C397 104 441 78 532 81C660 85 728 138 940 135" />
+                  <path d="M-40 151C194 151 254 169 319 151C387 132 444 108 536 112C650 117 737 174 940 171" />
+                  <path d="M-40 191C181 191 241 207 303 181C371 153 446 140 550 148C671 157 748 210 940 207" />
+                  <path d="M-40 264C200 264 293 269 405 267C589 263 734 250 940 248" />
+                </g>
+              </svg>
+              <div class="pressure-tag pressure-tag--high">p+</div>
+              <div class="pressure-tag pressure-tag--low">p−</div>
+            </div>
+            <div class="flow-controls">
+              <label for="speed-control">velocidad del flujo</label>
+              <input id="speed-control" type="range" min="80" max="400" value="240" step="20" />
+              <output for="speed-control"><strong>240</strong> km/h</output>
+              <div class="regime" aria-live="polite"><span class="regime-dot"></span><span>régimen: alta velocidad</span></div>
+            </div>
+          </div>
+
+          <div class="principles">
+            <article><span>01 / frontal</span><h3>cortar</h3><p>el morro bajo reduce el área frontal y conduce el flujo sobre el habitáculo.</p></article>
+            <article><span>02 / inferior</span><h3>sellar</h3><p>un fondo continuo limita la turbulencia bajo el vehículo y estabiliza el flujo.</p></article>
+            <article><span>03 / posterior</span><h3>liberar</h3><p>la cola define dónde se separa el aire; hacerlo tarde y limpio reduce la estela.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="numbers" aria-label="prestaciones declaradas del Roadster de nueva generación">
+        <div class="number"><strong>2,1</strong><span>s</span><p>0–100 km/h</p></div>
+        <div class="number"><strong>8,8</strong><span>s</span><p>¼ de milla</p></div>
+        <div class="number"><strong>1000</strong><span>km</span><p>autonomía declarada</p></div>
+        <p class="numbers-note">cifras publicadas por tesla para el roadster de nueva generación; no son resultados independientes.</p>
+      </section>
+
+      <section class="archive" id="archivo" aria-labelledby="archive-title">
+        <div class="section-index"><span>02</span><span>archivo</span></div>
+        <div class="archive-content">
+          <header class="section-heading">
+            <p class="eyebrow">roadster 2.5 · 2008–2012</p>
+            <h2 id="archive-title">medidas de ingeniería.<br /><span>documento oficial.</span></h2>
+            <p>tesla no publica planos dimensionales equivalentes del modelo de nueva generación. estas cotas pertenecen al roadster original y provienen de su manual técnico.</p>
+          </header>
+
+          <div class="blueprint" role="img" aria-label="plano lateral y frontal del Roadster original con cotas oficiales en milímetros">
+            <div class="blueprint-meta"><span>drawing tr0261</span><span>units: <b>mm</b></span><span>rev. archive</span></div>
+            <svg viewBox="0 0 1100 610">
+              <g class="bp-grid"><path d="M0 60H1100M0 120H1100M0 180H1100M0 240H1100M0 300H1100M0 360H1100M0 420H1100M0 480H1100M0 540H1100M100 0V610M200 0V610M300 0V610M400 0V610M500 0V610M600 0V610M700 0V610M800 0V610M900 0V610M1000 0V610" /></g>
+              <g class="bp-car-side">
+                <path d="M89 317C139 299 187 282 236 246C274 218 310 165 363 148C431 126 514 143 570 177C603 198 628 241 670 264C702 282 735 290 770 302L754 329H89Z" />
+                <path d="M244 241C286 195 316 158 367 148C417 138 469 143 509 157L550 211L291 216Z" />
+                <path d="M291 217L266 283M550 211L588 280M374 148L379 214" />
+                <circle cx="247" cy="315" r="57"/><circle cx="640" cy="315" r="57"/>
+              </g>
+              <g class="bp-dimensions">
+                <path d="M89 386V356M770 386V356M89 375H770"/><path d="M97 369l-8 6 8 6M762 369l8 6-8 6"/><text x="430" y="369">a · 3946</text>
+                <path d="M247 439V370M640 439V370M247 428H640"/><path d="M255 422l-8 6 8 6M632 422l8 6-8 6"/><text x="444" y="422">d · 2351</text>
+                <path d="M60 148H25M60 329H25M36 148V329"/><path d="M30 156l6-8 6 8M30 321l6 8 6-8"/><text x="18" y="244" transform="rotate(-90 18 244)">c · 1127</text>
+                <path d="M450 329v54M450 372H770"/><text x="594" y="365">g · 130</text>
+              </g>
+              <g class="bp-car-front" transform="translate(830 155)">
+                <path d="M15 154C26 100 50 59 105 39C157 20 209 37 240 69C259 89 272 117 279 154Z" />
+                <path d="M70 73C103 38 160 29 210 62L226 101H53Z" />
+                <path d="M22 154V183M272 154V183M22 174H272"/><text x="147" y="169">b · 1851</text>
+              </g>
+              <g class="bp-labels">
+                <text x="89" y="44">tesla roadster 2.5 / envelope study</text>
+                <text x="89" y="66">referencia geométrica reconstruida desde cotas públicas</text>
+              </g>
+            </svg>
+            <dl class="dimension-list">
+              <div><dt>a · largo total</dt><dd data-si="3946 mm" data-imperial="155.4 in">3946 mm</dd></div>
+              <div><dt>b · ancho c/espejos</dt><dd data-si="1851 mm" data-imperial="72.9 in">1851 mm</dd></div>
+              <div><dt>c · altura</dt><dd data-si="1127 mm" data-imperial="44.4 in">1127 mm</dd></div>
+              <div><dt>d · distancia entre ejes</dt><dd data-si="2351 mm" data-imperial="92.6 in">2351 mm</dd></div>
+              <div><dt>g · despeje</dt><dd data-si="130 mm" data-imperial="5.12 in">130 mm</dd></div>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <section class="sources" id="fuentes" aria-labelledby="sources-title">
+        <div class="section-index"><span>03</span><span>fuentes</span></div>
+        <div class="sources-content">
+          <h2 id="sources-title">datos con procedencia.</h2>
+          <ol>
+            <li><span>01</span><div><strong>roadster — prestaciones y descripción aerodinámica</strong><p>tesla, página oficial del vehículo de nueva generación.</p></div><a href="https://www.tesla.com/es_es/roadster" target="_blank" rel="noreferrer">abrir fuente <span aria-hidden="true">↗</span></a></li>
+            <li><span>02</span><div><strong>roadster 2.5 — manual del propietario</strong><p>tesla, cotas exteriores y diagrama tr0261, sección 10–15.</p></div><a href="https://service.tesla.com/docs/Public/Roadster/Owner/Roadster_2.5_Owners_Manual.pdf" target="_blank" rel="noreferrer">abrir pdf <span aria-hidden="true">↗</span></a></li>
+            <li><span>03</span><div><strong>roadster — manual de servicio</strong><p>tesla, especificaciones técnicas del vehículo original.</p></div><a href="https://service.tesla.com/docs/Public/Roadster/ServiceManual/en-us/GUID-4E037ADB-D0F4-48A0-9261-1083193D4C1B.html" target="_blank" rel="noreferrer">abrir fuente <span aria-hidden="true">↗</span></a></li>
+          </ol>
+          <p class="legal">proyecto educativo e independiente. tesla y roadster son marcas de tesla, inc. las ilustraciones son reconstrucciones visuales, no archivos cad ni planos de fabricación.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <a class="brand" href="#inicio"><span class="brand-mark" aria-hidden="true"></span><span>aero.lab</span></a>
+      <p>estudio visual de ingeniería pública.</p>
+      <a href="https://github.com/kisnner26/roadster-aero-lab">código fuente ↗</a>
+    </footer>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
