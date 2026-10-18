@@ -38,6 +38,8 @@ function init() {
   renderer.toneMappingExposure = 1.15
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFShadowMap
+  renderer.shadowMap.autoUpdate=false
+  let lastShadowDoor=-1,lastShadowFlight=-1,lastShadowWire=-1,lastShadowWheels=null
   const scene = new THREE.Scene()
   scene.fog = new THREE.FogExp2(0x080a0c, .024)
   const camera = new THREE.PerspectiveCamera(35, 1, .05, 150)
@@ -286,6 +288,10 @@ function init() {
     $('#timecode').textContent=`${Math.floor(t/60).toString().padStart(2,'0')}:${Math.floor(t%60).toString().padStart(2,'0')}`
     $('#scrubber-fill').style.transform=`scaleX(${t/duration})`
     $('#timeline').value=String(t)
+    if(Math.abs(doorAmount-lastShadowDoor)>.0001||Math.abs(flight-lastShadowFlight)>.0001||Math.abs(wireAmount-lastShadowWire)>.0001||car.wheels.visible!==lastShadowWheels){
+      renderer.shadowMap.needsUpdate=true
+      lastShadowDoor=doorAmount;lastShadowFlight=flight;lastShadowWire=wireAmount;lastShadowWheels=car.wheels.visible
+    }
     renderer.render(scene,camera)
     graphics.capture()
     cockpitScreen?.render(scene,camera,{interactive:Boolean(infotainment?.isOpen),allowed:chapter===3||screenStudioFocus})
@@ -359,7 +365,7 @@ function init() {
   $('#sources').addEventListener('click',event=>{if(event.target===$('#sources')){const r=$('#sources').getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)$('#sources').close()}})
   $('#sources').addEventListener('close',()=>{if(wasPlaying)setPlaying(true)})
   $('#sound').addEventListener('click',()=>audio.toggle())
-  driving=createDrivingMode({renderer,studio:scene,car,audio,reducedMotion:reducedMotion.matches,onFrame:stamp=>graphics.frame(stamp),onDashboard:()=>infotainment?.drawTexture(),onSceneRender:(scene,camera)=>{graphics.capture();cockpitScreen?.render(scene,camera,{interactive:Boolean(infotainment?.isOpen),allowed:driving.screenVisible})},isScreenOpen:()=>Boolean(infotainment?.isOpen),onExit:()=>{renderAt(state.time);setPlaying(resumeStudio)}})
+  driving=createDrivingMode({renderer,studio:scene,car,audio,reducedMotion:reducedMotion.matches,onFrame:stamp=>graphics.frame(stamp),onDashboard:()=>infotainment?.drawTexture(),onSceneRender:(scene,camera)=>{graphics.capture();cockpitScreen?.render(scene,camera,{interactive:Boolean(infotainment?.isOpen),allowed:driving.screenVisible})},isScreenOpen:()=>Boolean(infotainment?.isOpen),onExit:()=>{renderer.shadowMap.needsUpdate=true;renderAt(state.time);setPlaying(resumeStudio)}})
   let screenResume=false
   const carPreview=createCarPreview(renderer,car,scene.environment)
   infotainment=createInfotainment({car,audio,cabinLight,carPreview,graphics,getTelemetry:()=>driving.active?driving.telemetry:null,

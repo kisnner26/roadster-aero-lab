@@ -112,6 +112,7 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
     $('#drive-instructions').style.opacity=Math.abs(state.speed)>4?'0':'1'
     dashTimer+=dt
     if(dashTimer>.09||dt===0){onDashboard();dashTimer=0}
+    renderer.shadowMap.needsUpdate=true
     renderer.render(worldScene,camera)
     onSceneRender(worldScene,camera)
   }
