@@ -216,4 +216,3 @@ function createScreenTexture() {
   ctx.fillStyle='#b7c4cc';ctx.fillText('surface',28,270);ctx.fillText('aero',222,270);ctx.fillText('cabin',415,270)
   const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;return texture
 }
-
