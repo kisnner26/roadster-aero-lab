@@ -20,3 +20,6 @@
 #experience[data-mode=drive]>.masthead,#experience[data-mode=drive]>#drive-hud{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip-path:inset(50%)!important;pointer-events:none!important;white-space:nowrap!important}
 #experience[data-mode=drive]>#drive-hud .drive-tools,#experience[data-mode=drive]>#drive-hud .touch-steering,#experience[data-mode=drive]>#drive-hud .touch-pedals{display:none!important}
 #experience[data-mode=drive]>.masthead{display:none!important}
+/* video fills the whole projected screen; the dialog is 1024x576 so cover the shell. */
+#infotainment.os-video-full .os-theater,#infotainment.os-video-full .os-local-stage{position:absolute;inset:0;z-index:12;margin:0;border:0;border-radius:0;height:auto;min-height:0;background:#000}
+#infotainment.os-video-full .os-local-stage video{object-fit:contain}
