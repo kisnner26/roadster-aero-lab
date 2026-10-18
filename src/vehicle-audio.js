@@ -1,7 +1,7 @@
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v))
 
 export function createVehicleAudio(onChange=()=>{}) {
-  let context,master,motor,wind,road,skid,enabled=false,driving=false,compressor,level=.65
+  let context,master,motor,wind,road,skid,jet,enabled=false,driving=false,compressor,level=.65
   const tones=[]
   function noiseBuffer() {
     const buffer=context.createBuffer(1,context.sampleRate*2,context.sampleRate),data=buffer.getChannelData(0)
@@ -24,7 +24,7 @@ export function createVehicleAudio(onChange=()=>{}) {
       const oscillator=context.createOscillator(),gain=context.createGain();oscillator.type=type;oscillator.frequency.value=55*ratio;gain.gain.value=volume
       oscillator.connect(gain);gain.connect(motor);oscillator.start();tones.push({oscillator,ratio})
     }
-    const noise=noiseBuffer();wind=layer(noise,'lowpass',500);road=layer(noise,'bandpass',350,.6);skid=layer(noise,'bandpass',1150,2.5)
+    const noise=noiseBuffer();wind=layer(noise,'lowpass',500);road=layer(noise,'bandpass',350,.6);skid=layer(noise,'bandpass',1150,2.5);jet=layer(noise,'highpass',1700,.5)
   }
   function volume() {
     if(context)master.gain.setTargetAtTime(enabled&&!document.hidden?level:0,context.currentTime,.15)
@@ -44,7 +44,8 @@ export function createVehicleAudio(onChange=()=>{}) {
     tones.forEach(({oscillator,ratio})=>oscillator.frequency.setTargetAtTime(frequency*ratio,time,.12))
     motor.gain.setTargetAtTime(driving?.025+load*.085+speed*.0007:.012,time,.15)
     wind.filter.frequency.setTargetAtTime(260+speed*22,time,.18)
-    wind.gain.gain.setTargetAtTime(driving?Math.pow(speed/69,1.7)*.33:0,time,.2)
+    wind.gain.gain.setTargetAtTime(driving?Math.pow(Math.min(1,speed/112),1.7)*.33:0,time,.2)
+    jet.gain.gain.setTargetAtTime(driving?Math.min(1,(state.boost||0)+(state.lift||0)+(state.assist||0)*.4)*.25:0,time,.07)
     road.filter.frequency.setTargetAtTime(state.offroad?1150:240+speed*9,time,.1)
     road.gain.gain.setTargetAtTime(driving?clamp(speed/50,0,1)* (state.offroad?.33:.12):0,time,.12)
     skid.gain.gain.setTargetAtTime(driving?clamp(state.slip||0,0,1)*.18:0,time,.07)
