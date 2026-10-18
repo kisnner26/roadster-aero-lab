@@ -335,7 +335,7 @@ function init() {
   addEventListener('keydown',event=>{
     if(event.ctrlKey||event.metaKey||event.altKey||infotainment?.isOpen)return
     if(driving?.active)return
-    if($('#sources').open || /INPUT|TEXTAREA|SELECT|BUTTON|A/.test(document.activeElement.tagName)||document.activeElement.isContentEditable)return
+    if($('#sources').open || /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(document.activeElement.tagName)||document.activeElement.isContentEditable)return
     if(event.code==='Space'){event.preventDefault();setPlaying(!playing)}
     if(event.key==='ArrowRight'){event.preventDefault();doorOverride=null;seek((activeChapter+1)%chapters.length*14+.1)}
     if(event.key==='ArrowLeft'){event.preventDefault();doorOverride=null;seek((activeChapter+chapters.length-1)%chapters.length*14+.1)}
