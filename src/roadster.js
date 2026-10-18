@@ -1,11 +1,11 @@
 import * as THREE from 'three'
 
 const v=(x,y,z)=>new THREE.Vector3(x,y,z)
-const paint=new THREE.MeshPhysicalMaterial({color:0xc4c8cb,metalness:.58,roughness:.26,clearcoat:.7,clearcoatRoughness:.18,envMapIntensity:.8,side:THREE.DoubleSide})
+const paint=new THREE.MeshPhysicalMaterial({color:0xd6d9db,metalness:.62,roughness:.24,clearcoat:1,clearcoatRoughness:.14,envMapIntensity:.9,side:THREE.DoubleSide})
 const carbon=new THREE.MeshStandardMaterial({color:0x080b0f,metalness:.3,roughness:.38,side:THREE.DoubleSide})
 const rubber=new THREE.MeshStandardMaterial({color:0x0e1013,roughness:.9})
 const alloy=new THREE.MeshStandardMaterial({color:0xd7dadd,metalness:.68,roughness:.26,envMapIntensity:1.1})
-const glass=new THREE.MeshPhysicalMaterial({color:0x211c16,metalness:.42,roughness:.12,clearcoat:.8,side:THREE.FrontSide,transparent:true,opacity:.96})
+const glass=new THREE.MeshPhysicalMaterial({color:0x493d2d,metalness:.12,roughness:.08,clearcoat:1,envMapIntensity:.9,side:THREE.FrontSide,transparent:true,opacity:.66,depthWrite:false})
 const upholstery=new THREE.MeshStandardMaterial({color:0xcbd1d5,roughness:.75,side:THREE.DoubleSide})
 const led=new THREE.MeshBasicMaterial({color:0xd2ebff})
 const redLed=new THREE.MeshBasicMaterial({color:0xff161b})
