@@ -5,7 +5,7 @@ import {createVehicleState,stepVehicle,vehicleConfig} from './vehicle-physics.js
 const $=selector=>document.querySelector(selector)
 const heldKeys=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'])
 
-export function createDrivingMode({renderer,studio,car,audio,onExit,reducedMotion=false}) {
+export function createDrivingMode({renderer,studio,car,audio,onExit,onDashboard=()=>{},isScreenOpen=()=>false,reducedMotion=false}) {
   const worldScene=new THREE.Scene();worldScene.environment=studio.environment
   const world=createDrivingWorld(worldScene)
   const camera=new THREE.PerspectiveCamera(74,1,.025,2200)
@@ -45,26 +45,12 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,reducedMotio
     state.gear*=-1;$('#drive-message').textContent=state.gear===1?'avance seleccionado':'reversa seleccionada';draw(0)
   }
   function pause(value=!paused) {
+    if(!value&&car.doors.some(({pivot})=>pivot.rotation.z>.5)){$('#drive-message').textContent='cierra las puertas desde la pantalla antes de continuar';return}
     paused=value;clearInput();audio.update({speed:0,throttle:0,slip:0})
     $('#drive-pause').setAttribute('aria-pressed',String(paused))
     $('#drive-pause').replaceChildren(document.createTextNode(paused?'continuar':'pausa'))
     cancelAnimationFrame(raf);last=0;accumulator=0
     if(active&&!paused&&!document.hidden)raf=requestAnimationFrame(tick)
-  }
-  function drawDashboard() {
-    const texture=car.screenTexture
-    if(!texture)return
-    const ctx=texture.image.getContext('2d'),speed=Math.round(Math.abs(state.speed)*3.6)
-    ctx.fillStyle='#0b1118';ctx.fillRect(0,0,512,288)
-    ctx.fillStyle='#c0cbd4';ctx.font='17px monospace';ctx.fillText('roadster / driving lab',24,35)
-    ctx.fillStyle='#f2f5f6';ctx.font='100px sans-serif';ctx.fillText(String(speed),26,158)
-    ctx.font='17px monospace';ctx.fillStyle='#93a8b8';ctx.fillText('km/h',28,190)
-    ctx.fillStyle='#eaeef1';ctx.font='32px monospace';ctx.fillText(state.gear===1?'d':'r',443,80)
-    ctx.strokeStyle='#9db4c1';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(315,201);ctx.lineTo(348,77);ctx.moveTo(437,201);ctx.lineTo(405,77);ctx.stroke()
-    ctx.strokeStyle='#f1513b';ctx.lineWidth=2;ctx.strokeRect(364,157,27,45)
-    ctx.fillStyle='#36424d';ctx.fillRect(26,240,460,4);ctx.fillStyle=state.brake?'#ff593f':'#d9e6ee';ctx.fillRect(26,240,460*Math.max(state.throttle,state.brake),4)
-    ctx.font='13px monospace';ctx.fillStyle='#96adbd';ctx.fillText(state.offroad?'surface / gravel':'surface / asphalt',26,272)
-    texture.needsUpdate=true
   }
   function draw(dt) {
     const nearest=world.nearest(state.x,state.z)
@@ -104,7 +90,7 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,reducedMotio
     $('#drive-lap').textContent=`vuelta ${String(lap).padStart(2,'0')} / ${Math.floor(lapTime/60)}:${Math.floor(lapTime%60).toString().padStart(2,'0')}`
     $('#drive-instructions').style.opacity=Math.abs(state.speed)>4?'0':'1'
     dashTimer+=dt
-    if(dashTimer>.09||dt===0){drawDashboard();dashTimer=0}
+    if(dashTimer>.09||dt===0){onDashboard();dashTimer=0}
     renderer.render(worldScene,camera)
   }
   function tick(stamp) {
@@ -137,7 +123,7 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,reducedMotio
     renderer.setClearColor(0x080a0c);renderer.toneMappingExposure=1.15;onExit()
   }
   function keydown(event) {
-    if(!active||/INPUT|TEXTAREA|SELECT/.test(event.target.tagName))return
+    if(!active||isScreenOpen()||/INPUT|TEXTAREA|SELECT/.test(event.target.tagName))return
     if(event.code==='Escape'){event.preventDefault();exit();return}
     if(event.repeat&&!heldKeys.has(event.code))return
     if(heldKeys.has(event.code)){
@@ -167,5 +153,5 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,reducedMotio
   $('#viewport').addEventListener('pointerup',()=>dragging=false);$('#viewport').addEventListener('pointercancel',()=>dragging=false)
   lastControls=$('#drive-instructions').textContent
   $('#viewport').addEventListener('focus',()=>{if(active)$('#drive-instructions').textContent=lastControls})
-  return {get active(){return active},enter,exit,resize}
+  return {get active(){return active},get camera(){return camera},get screenVisible(){return !exterior},get telemetry(){return {...state,active}},pause,reset,enter,exit,resize}
 }

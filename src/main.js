@@ -5,6 +5,8 @@ import { gsap } from 'gsap'
 import { createRoadster, referenceEnvelope } from './roadster.js'
 import { createVehicleAudio } from './vehicle-audio.js'
 import { createDrivingMode } from './driving.js'
+import { createInfotainment } from './infotainment.js'
+import { createCarPreview } from './car-preview.js'
 
 const $ = selector => document.querySelector(selector)
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
@@ -20,7 +22,7 @@ try {
 if (renderer) init()
 
 function init() {
-  let driving=null,resumeStudio=false
+  let driving=null,infotainment=null,resumeStudio=false
   const audio=createVehicleAudio(enabled=>{
     $('#sound').setAttribute('aria-pressed',String(enabled))
     $('#sound').setAttribute('aria-label',enabled?'silenciar sonido ambiental':'activar sonido ambiental')
@@ -343,7 +345,33 @@ function init() {
   $('#sources').addEventListener('click',event=>{if(event.target===$('#sources')){const r=$('#sources').getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)$('#sources').close()}})
   $('#sources').addEventListener('close',()=>{if(wasPlaying)setPlaying(true)})
   $('#sound').addEventListener('click',()=>audio.toggle())
-  driving=createDrivingMode({renderer,studio:scene,car,audio,reducedMotion:reducedMotion.matches,onExit:()=>{renderAt(state.time);setPlaying(resumeStudio)}})
+  driving=createDrivingMode({renderer,studio:scene,car,audio,reducedMotion:reducedMotion.matches,onDashboard:()=>infotainment?.drawTexture(),isScreenOpen:()=>Boolean(infotainment?.isOpen),onExit:()=>{renderAt(state.time);setPlaying(resumeStudio)}})
+  let screenResume=false
+  const carPreview=createCarPreview(renderer,car,scene.environment)
+  infotainment=createInfotainment({car,audio,cabinLight,carPreview,getTelemetry:()=>driving.active?driving.telemetry:null,
+    onVisualChange:()=>{if(driving.active)driving.resize();else renderAt(state.time)},
+    onOpen:()=>{screenResume=playing;setPlaying(false);doorTween?.kill();if(driving.active)driving.pause(true)},
+    onClose:()=>{if(!driving.active)setPlaying(screenResume)},
+    onReset:()=>{if(driving.active)driving.reset()},
+    onDoors:()=>{
+      if(!driving.active){$('#doors').click();return car.doors[0].pivot.rotation.z<.5}
+      const opened=car.doors[0].pivot.rotation.z<.5
+      car.doors.forEach(({pivot,sign})=>{pivot.rotation.z=opened?1.17:0;pivot.rotation.x=opened?sign*.24:0;pivot.rotation.y=opened?sign*.1:0});audio.door();driving.resize();return opened
+    },
+  })
+  $('#open-screen').addEventListener('click',()=>infotainment.open())
+  addEventListener('keydown',event=>{if(event.code==='KeyE'&&!event.repeat&&!document.querySelector('dialog[open]')&&!/INPUT|TEXTAREA|SELECT/.test(event.target.tagName)){event.preventDefault();infotainment.open()}})
+  const screenRay=new THREE.Raycaster(),screenPointer=new THREE.Vector2()
+  let screenPointerStart=null
+  canvas.addEventListener('pointerdown',event=>screenPointerStart=[event.clientX,event.clientY])
+  canvas.addEventListener('pointerup',event=>{
+    if(!screenPointerStart||Math.hypot(event.clientX-screenPointerStart[0],event.clientY-screenPointerStart[1])>6)return
+    screenPointerStart=null
+    if(driving.active?!driving.screenVisible:activeChapter!==3)return
+    const bounds=canvas.getBoundingClientRect();screenPointer.set((event.clientX-bounds.left)/bounds.width*2-1,-(event.clientY-bounds.top)/bounds.height*2+1)
+    screenRay.setFromCamera(screenPointer,driving.active?driving.camera:camera)
+    if(screenRay.intersectObject(car.screenSurface).length)infotainment.open()
+  })
   $('#drive-toggle').addEventListener('click',()=>{
     if(driving.active){driving.exit();return}
     resumeStudio=playing;setPlaying(false);doorTween?.kill();doorTween=null;doorOverride=null;seek(0);driving.enter()
