@@ -8,6 +8,7 @@ import { createDrivingMode } from './driving.js'
 import { createInfotainment } from './infotainment.js'
 import { createCarPreview } from './car-preview.js'
 import { createCockpitScreen,screenFocusFov } from './cockpit-screen.js'
+import { createRenderQuality } from './render-quality.js'
 import './cockpit-screen.css'
 
 const $ = selector => document.querySelector(selector)
@@ -31,7 +32,7 @@ function init() {
     $('#sound-icon').setAttribute('d',enabled?'M4 10h4l5-4v12l-5-4H4zM17 8q5 4 0 8M20 5q8 7 0 14':'M4 10h4l5-4v12l-5-4H4zM17 9l5 6M22 9l-5 6')
     $('#drive-sound').setAttribute('aria-pressed',String(enabled));$('#drive-sound').textContent=enabled?'sonido on':'sonido off'
   })
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75))
+  const graphics=createRenderQuality(renderer,canvas)
   renderer.setClearColor(0x080a0c)
   renderer.toneMapping = THREE.ACESFilmicToneMapping
   renderer.toneMappingExposure = 1.15
@@ -157,7 +158,7 @@ function init() {
 
   function resize() {
     width = $('#experience').clientWidth; height = $('#experience').clientHeight; mobile = width < 600
-    renderer.setSize(width, height, false)
+    graphics.resize(width,height)
     camera.aspect = width / height
     camera.updateProjectionMatrix()
     if(driving?.active){driving.resize();return}
@@ -283,6 +284,7 @@ function init() {
     $('#scrubber-fill').style.transform=`scaleX(${t/duration})`
     $('#timeline').value=String(t)
     renderer.render(scene,camera)
+    graphics.capture()
     cockpitScreen?.render(scene,camera,{interactive:Boolean(infotainment?.isOpen),allowed:chapter===3||screenStudioFocus})
   }
 
@@ -293,6 +295,7 @@ function init() {
   }
   function tick(stamp) {
     if(!playing || document.hidden)return
+    graphics.frame(stamp)
     const delta=lastStamp?Math.min((stamp-lastStamp)/1000,.06):0
     lastStamp=stamp
     seek(state.time+delta>=duration?0:state.time+delta)
@@ -351,10 +354,10 @@ function init() {
   $('#sources').addEventListener('click',event=>{if(event.target===$('#sources')){const r=$('#sources').getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)$('#sources').close()}})
   $('#sources').addEventListener('close',()=>{if(wasPlaying)setPlaying(true)})
   $('#sound').addEventListener('click',()=>audio.toggle())
-  driving=createDrivingMode({renderer,studio:scene,car,audio,reducedMotion:reducedMotion.matches,onDashboard:()=>infotainment?.drawTexture(),onSceneRender:(scene,camera)=>cockpitScreen?.render(scene,camera,{interactive:Boolean(infotainment?.isOpen),allowed:driving.screenVisible}),isScreenOpen:()=>Boolean(infotainment?.isOpen),onExit:()=>{renderAt(state.time);setPlaying(resumeStudio)}})
+  driving=createDrivingMode({renderer,studio:scene,car,audio,reducedMotion:reducedMotion.matches,onFrame:stamp=>graphics.frame(stamp),onDashboard:()=>infotainment?.drawTexture(),onSceneRender:(scene,camera)=>{graphics.capture();cockpitScreen?.render(scene,camera,{interactive:Boolean(infotainment?.isOpen),allowed:driving.screenVisible})},isScreenOpen:()=>Boolean(infotainment?.isOpen),onExit:()=>{renderAt(state.time);setPlaying(resumeStudio)}})
   let screenResume=false
   const carPreview=createCarPreview(renderer,car,scene.environment)
-  infotainment=createInfotainment({car,audio,cabinLight,carPreview,getTelemetry:()=>driving.active?driving.telemetry:null,
+  infotainment=createInfotainment({car,audio,cabinLight,carPreview,graphics,getTelemetry:()=>driving.active?driving.telemetry:null,
     onVisualChange:()=>{if(driving.active)driving.resize();else renderAt(state.time)},
     onOpen:()=>{screenResume=playing;setPlaying(false);doorTween?.kill();$('#experience').dataset.screenFocused='true';if(driving.active){driving.pause(true);driving.focusScreen(true)}else{screenStudioFocus=true;doorOverride=0;userAzimuth=0;userElevation=0;seek(47)}},
     onClose:()=>{$('#experience').dataset.screenFocused='false';if(driving.active)driving.focusScreen(false);else{screenStudioFocus=false;renderAt(state.time);setPlaying(screenResume)}},

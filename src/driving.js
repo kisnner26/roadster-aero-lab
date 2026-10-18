@@ -7,7 +7,7 @@ import {stepExhibitionLoop,stuntLoop} from './stunt-physics.js'
 const $=selector=>document.querySelector(selector)
 const heldKeys=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','ShiftLeft','ShiftRight','KeyX','KeyI','KeyK','KeyJ','KeyL'])
 
-export function createDrivingMode({renderer,studio,car,audio,onExit,onDashboard=()=>{},onSceneRender=()=>{},isScreenOpen=()=>false,reducedMotion=false}) {
+export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>{},onDashboard=()=>{},onSceneRender=()=>{},isScreenOpen=()=>false,reducedMotion=false}) {
   const worldScene=new THREE.Scene();worldScene.environment=studio.environment
   const world=createDrivingWorld(worldScene,car)
   const camera=new THREE.PerspectiveCamera(74,1,.025,6000)
@@ -111,6 +111,7 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onDashboard=
   }
   function tick(stamp) {
     if(!active||paused||document.hidden)return
+    onFrame(stamp)
     const dt=last?Math.min((stamp-last)/1000,.05):0;last=stamp;accumulator+=dt
     const pad=navigator.getGamepads?.()[0]
     const input={throttle:Math.max(touch.throttle,keys.has('KeyW')||keys.has('ArrowUp')?1:0,pad?.buttons[7]?.value||0),brake:Math.max(touch.brake,keys.has('KeyS')||keys.has('ArrowDown')?1:0,pad?.buttons[6]?.value||0),steer:(touch.right||keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(touch.left||keys.has('KeyA')||keys.has('ArrowLeft')?1:0)+(Math.abs(pad?.axes[0]||0)>.12?pad.axes[0]:0),handbrake:keys.has('KeyX'),boost:keys.has('ShiftLeft')||keys.has('ShiftRight')||pad?.buttons[0]?.pressed,lift:keys.has('Space')||pad?.buttons[1]?.pressed,pitch:(keys.has('KeyI')?1:0)-(keys.has('KeyK')?1:0),roll:(keys.has('KeyL')?1:0)-(keys.has('KeyJ')?1:0)}

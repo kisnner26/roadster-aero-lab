@@ -1,5 +1,6 @@
 import {webTarget,youtubeVideo,readCabinSettings} from './infotainment-utils.js'
 import './infotainment.css'
+import './render-quality.css'
 
 const icons={map:'M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2zM9 4v14M15 6v14',web:'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0M3 12h18M12 3c5 5 5 13 0 18-5-5-5-13 0-18',video:'M5 5h14v14H5zM10 8l6 4-6 4z',media:'M9 18V5l11-2v13M9 7l11-2M9 17c0 4-6 4-6 1s6-4 6-1M20 15c0 4-6 4-6 1s6-4 6-1',car:'M4 14l2-6h12l2 6v5h-3v-2H7v2H4zM4 13h16M7 15h2M15 15h2',close:'M6 6l12 12M18 6L6 18',expand:'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5',back:'M15 5l-7 7 7 7',sound:'M4 9h4l5-4v14l-5-4H4zM17 8q5 4 0 8',arrow:'M5 12h14M13 6l6 6-6 6',climate:'M12 3v18M4 7l16 10M4 17L20 7M9 5l3 3 3-3M9 19l3-3 3 3',light:'M9 17h6M10 21h4M9 14a6 6 0 1 1 6 0v3H9z',play:'M8 5l12 7-12 7z'}
 const icon=name=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${icons[name]}"/></svg>`
@@ -17,7 +18,7 @@ function loadYouTube() {
   return apiPromise
 }
 
-export function createInfotainment({car,audio,cabinLight,carPreview,onOpen,onClose,getTelemetry,onReset,onDoors,onVisualChange=()=>{}}) {
+export function createInfotainment({car,audio,cabinLight,carPreview,graphics,onOpen,onClose,getTelemetry,onReset,onDoors,onVisualChange=()=>{}}) {
   let storage
   try{storage=localStorage}catch{storage={getItem:()=>null}}
   const settings=readCabinSettings(storage)
@@ -87,6 +88,10 @@ export function createInfotainment({car,audio,cabinLight,carPreview,onOpen,onClo
   const controls=document.createElement('div');controls.className='os-game-controls'
   controls.innerHTML='<p>wasd / flechas · conducir &nbsp; 1 / 3 / c · cámara &nbsp; shift · empuje</p><p>espacio · elevación &nbsp; i / k · cabeceo &nbsp; j / l · giro aéreo &nbsp; x · freno de mano</p><p>f · performance / thrust / rocket &nbsp; q · succión &nbsp; n · cinco coches &nbsp; v · camión &nbsp; g · loop &nbsp; b · circuito</p><p>e · pantalla &nbsp; p · pausa &nbsp; r · reversa &nbsp; t · reiniciar &nbsp; m · audio &nbsp; esc · salir</p><p id="os-game-status" role="status"></p>'
   $('#os-panel-car').prepend(controls)
+  const qualityControls=document.createElement('fieldset');qualityControls.className='os-quality'
+  qualityControls.innerHTML='<legend>renderizado</legend><div role="group" aria-label="calidad gráfica"><button data-quality="auto" aria-pressed="true">automático</button><button data-quality="quality" aria-pressed="false">calidad</button><button data-quality="performance" aria-pressed="false">rendimiento</button></div><span id="os-render-stats"></span>'
+  controls.after(qualityControls)
+  qualityControls.addEventListener('click',event=>{const mode=event.target.closest('[data-quality]')?.dataset.quality;if(!mode)return;graphics.setMode(mode);update();onVisualChange()})
   const airStatus=document.createElement('span');airStatus.id='os-air-status';airStatus.className='os-eyebrow';$('.os-vehicle').append(airStatus)
   dialog.querySelectorAll('[data-os-app]').forEach(button=>button.addEventListener('click',()=>switchApp(button.dataset.osApp)))
   function openExternal(url) {window.open(url,'_blank','noopener,noreferrer')}
@@ -169,6 +174,8 @@ export function createInfotainment({car,audio,cabinLight,carPreview,onOpen,onClo
     if(stamp-lastSample>500){history.push(Math.abs(state.speed)*3.6);if(history.length>60)history.shift();lastSample=stamp}
     {
       $('#os-clock').textContent=new Intl.DateTimeFormat('es',{hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date())
+      qualityControls.querySelectorAll('[data-quality]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.quality===graphics.mode)))
+      $('#os-render-stats').textContent=`escala ${graphics.ratio.toFixed(2)}× / resolución adaptada a la ventana`
       $('.os-park').textContent=state.active?(state.paused?'p · pausa':state.gear===-1?'r · reversa':'d · conducción'):'p · estudio'
       $('#os-speed').textContent=Math.round(Math.abs(state.speed)*3.6)
       $('#os-distance').replaceChildren(document.createTextNode((Math.abs(state.distance)/1000).toFixed(2)+' '));const unit=document.createElement('small');unit.textContent='km';$('#os-distance').append(unit)
