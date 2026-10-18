@@ -4,7 +4,7 @@ reconstrucción independiente del nuevo roadster a partir de referencias visuale
 
 [ver sitio](https://kisnner26.github.io/roadster-aero-lab/)
 
-![estudio tridimensional del roadster](public/assets/roadster-studio.jpg)
+![pintura y paneles con iluminación corregida](public/assets/roadster-polished-studio.jpg)
 
 ## incluye
 
@@ -17,6 +17,7 @@ reconstrucción independiente del nuevo roadster a partir de referencias visuale
 - cúpula de cristal curvada, cintura más estrecha y alerón retráctil
 - conducción con aceleración, frenado regenerativo, reversa, agarre limitado y menor tracción sobre grava
 - primera y tercera persona sin hud flotante; información en las pantallas físicas del coche
+- cámara exterior con distancia estable a alta velocidad, luces de frenado/regeneración, reversa y aerofreno ligados a la conducción
 - performance, thrust y rocket; aire limitado, elevación, giro aéreo, succión y aerodinámica activa aproximadas
 - cinco coches para saltar, un camión, rampas, un loop de exhibición y una recta de velocidad
 - motor eléctrico sintetizado, viento, rodadura y derrape ligados al estado del coche
@@ -26,6 +27,7 @@ reconstrucción independiente del nuevo roadster a partir de referencias visuale
 - cámaras continuas, exploración táctil, navegación y línea de tiempo
 - sonido ambiental opcional, movimiento reducido y pausa al ocultar la pestaña
 - escena y tipografías locales; youtube y páginas externas requieren conexión
+- resolución adaptativa y perfiles automático, calidad y rendimiento dentro del monitor; circuito cargado bajo demanda
 
 ![campo de flujo cualitativo](public/assets/roadster-flow.jpg)
 
@@ -48,10 +50,14 @@ pulsa `conducir`. `wasd` / flechas: conducir; `1` / `3`: primera/tercera persona
 - youtube: pega un enlace normal, corto o de shorts. usa el reproductor oficial sin autoplay; los vídeos restringidos ofrecen salida a youtube.
 - navegador: búsquedas reales en google y direcciones externas en otra pestaña; vista interna aislada para webs que permiten iframes. no emula chrome ni elude restricciones de los sitios.
 - biblioteca: audio y vídeo desde el dispositivo mediante urls de objeto; no se suben archivos. cambiar de aplicación pausa el contenido anterior; salir de la vista ampliada no apaga el monitor.
-- ajustes: volumen del coche y archivos locales, brillo de la interfaz y luz real de la escena. la temperatura es conceptual, no una simulación térmica.
-- privacidad: youtube solo se conecta al cargar un vídeo. la vista web solo carga la dirección solicitada. únicamente las preferencias de cabina se guardan en localstorage; no se guardan búsquedas ni archivos.
+- ajustes: volumen del coche y archivos locales, brillo de la interfaz, luz real de la escena y perfil gráfico desde `h` → vehículo. la temperatura es conceptual, no una simulación térmica.
+- privacidad: youtube solo se conecta al cargar un vídeo. la vista web solo carga la dirección solicitada. se guardan únicamente preferencias de cabina y perfil gráfico en localstorage; no se guardan búsquedas ni archivos.
 
 [arquitectura de la pantalla](docs/infotainment.md) · [fuentes y límites de conducción](docs/driving-model.md) · [loop en funcionamiento](public/assets/roadster-stunt-loop.jpg) · [vídeo desde el asiento](public/assets/roadster-pov-media.jpg)
+
+![ajustes gráficos operativos dentro del monitor](public/assets/roadster-render-settings.jpg)
+
+[presupuestos y mediciones de rendimiento](docs/performance.md): texturas 71 % más ligeras, tipografías 59 % más ligeras y una muestra de la pista de saltos con 581 llamadas de dibujo frente a 1,084. son mediciones locales, no garantías de fps.
 
 ![habitáculo reconstruido](public/assets/roadster-cabin.jpg)
 
@@ -68,6 +74,7 @@ validación:
 npm run check
 npm test
 npm run build
+npm run benchmark:track
 ```
 
 ## fuentes
