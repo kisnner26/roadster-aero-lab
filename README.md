@@ -41,6 +41,8 @@ pulsa `conducir`. `wasd` / flechas: conducir; `1` / `3`: primera/tercera persona
 
 `n`: cinco coches; `v`: camión; `g`: loop; `b`: circuito; `p`: pausa; `t`: reiniciar zona; `r`: reversa al detenerte; `m`: audio; escape: estudio. arrastra para mirar u orbitar. un mando estándar admite stick izquierdo, gatillos para pedales y botones 0/1 para empuje/elevación.
 
+el mando funciona en cualquier puerto: suelta los controles al entrar o reanudar para habilitarlo. desconectarlo pausa el coche; puedes continuar con teclado pulsando `p`.
+
 `e` o tocar el monitor: acercar la cámara a la pantalla física; `h`: controles dentro del coche. escape devuelve la cámara. la conducción queda pausada hasta pulsar `p`; las puertas deben estar cerradas. la pantalla es html operativo proyectado con la cámara de la escena, incluyendo los iframes de youtube. los vídeos siguen en ese monitor al devolver la vista al habitáculo. el modo de juego está pensado para teclado o mando; no hay botones táctiles flotantes.
 
 ![youtube en el monitor físico](public/assets/roadster-physical-screen.jpg)

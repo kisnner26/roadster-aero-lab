@@ -57,4 +57,6 @@ la descarga inicial combinada sigue cerca de 201.5 kb gzip: esta división mejor
 
 ## límites pendientes
 
+el sintetizador conserva el último objetivo de cada parámetro de audio. si la telemetría no cambia, no vuelve a encolar las mismas automatizaciones; los cambios reales mantienen las rampas suaves. una prueba con 600 actualizaciones de reposo comprueba que no se añadan eventos duplicados. esto no equivale a suspender el contexto ni demuestra una mejora de fps durante aceleración continua. las solicitudes de activar/silenciar respetan la última intención incluso si el navegador completa `resume()` fuera de orden; un rechazo no deja el botón marcado como activo.
+
 three.js sigue siendo la mayor parte del javascript inicial. no se oculta su aviso de tamaño ni se atribuye la división del mundo a una reducción de toda la biblioteca. no se promete una puntuación lighthouse ni una tasa de cuadros universal. el modelo y la física continúan siendo una reconstrucción visual y una simulación de juego, no ingeniería certificada del fabricante.

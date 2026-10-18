@@ -27,4 +27,8 @@ la ficha consultada no aporta curvas de par/potencia, dimensiones completas, par
 
 `wasd`, `1` / `3`, `shift`, espacio, `i/k`, `j/l`, `x`, `q` y `f` controlan conducción, cámaras, propulsión, actitud, freno de mano, succión y configuración. `h` muestra la ayuda dentro del monitor del coche. no hay paneles superpuestos durante el manejo.
 
+los mandos con mapeo estándar se detectan en cualquier puerto. el stick izquierdo usa una zona muerta del 12 %, reescalada progresivamente hasta el máximo; gatillos 7/6 controlan acelerador/freno y botones 0/1 activan empuje/elevación. teclado y mando se combinan sin superar el rango de dirección. después de entrar, reiniciar o reanudar, suelta stick, gatillos y esos botones para armar el mando. su desconexión pausa la conducción; `p` permite continuar con teclado. los mapeos no estándar se ignoran para no asignar pedales arbitrariamente.
+
+ocultar la pestaña o perder el foco mantiene la conducción pausada aunque la preparación del audio termine más tarde. la recuperación del foco no reanuda el coche automáticamente. estas rutas y las muestras sintéticas de mando se verifican por separado; no sustituyen una prueba con hardware físico.
+
 las pruebas verifican límites, frenado, aire finito, aceleración objetivo, despegue, aterrizaje, salto completo sobre cinco coches y contacto invertido. pasar las pruebas confirma el comportamiento del juego, no la exactitud de un automóvil de producción.
