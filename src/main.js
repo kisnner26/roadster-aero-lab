@@ -7,6 +7,8 @@ import { createVehicleAudio } from './vehicle-audio.js'
 import { createDrivingMode } from './driving.js'
 import { createInfotainment } from './infotainment.js'
 import { createCarPreview } from './car-preview.js'
+import { createCockpitScreen,screenFocusFov } from './cockpit-screen.js'
+import './cockpit-screen.css'
 
 const $ = selector => document.querySelector(selector)
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
@@ -22,7 +24,7 @@ try {
 if (renderer) init()
 
 function init() {
-  let driving=null,infotainment=null,resumeStudio=false
+  let driving=null,infotainment=null,cockpitScreen=null,screenStudioFocus=false,resumeStudio=false
   const audio=createVehicleAudio(enabled=>{
     $('#sound').setAttribute('aria-pressed',String(enabled))
     $('#sound').setAttribute('aria-label',enabled?'silenciar sonido ambiental':'activar sonido ambiental')
@@ -77,7 +79,7 @@ function init() {
     if (!object.isMesh) return
     const materials = Array.isArray(object.material) ? object.material : [object.material]
     materials.forEach(material => {
-      if(material===car.plumeMaterial)return
+      if(material===car.plumeMaterial||material===car.liftPlumeMaterial)return
       if (!solidMaterials.has(material)) solidMaterials.set(material, material.opacity)
       material.transparent = true
     })
@@ -229,7 +231,9 @@ function init() {
     spherical.phi=THREE.MathUtils.clamp(spherical.phi+userElevation,.15,Math.PI/2-.03)
     camera.position.copy(target).add(new THREE.Vector3().setFromSpherical(spherical))
     camera.lookAt(target)
+    if(screenStudioFocus){camera.position.set(.24,.80,0);camera.lookAt(-.349,.795,0);camera.fov=screenFocusFov(camera.aspect);camera.clearViewOffset()}
     camera.updateMatrixWorld()
+    camera.updateProjectionMatrix()
 
     const wireAmount=smooth(13,16,t)*(1-smooth(25,28,t))
     const flight=smooth(56,60,t)*(1-smooth(67,70,t))
@@ -279,6 +283,7 @@ function init() {
     $('#scrubber-fill').style.transform=`scaleX(${t/duration})`
     $('#timeline').value=String(t)
     renderer.render(scene,camera)
+    cockpitScreen?.render(scene,camera,{interactive:Boolean(infotainment?.isOpen),allowed:chapter===3||screenStudioFocus})
   }
 
   function seek(time) {
@@ -345,13 +350,13 @@ function init() {
   $('#sources').addEventListener('click',event=>{if(event.target===$('#sources')){const r=$('#sources').getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)$('#sources').close()}})
   $('#sources').addEventListener('close',()=>{if(wasPlaying)setPlaying(true)})
   $('#sound').addEventListener('click',()=>audio.toggle())
-  driving=createDrivingMode({renderer,studio:scene,car,audio,reducedMotion:reducedMotion.matches,onDashboard:()=>infotainment?.drawTexture(),isScreenOpen:()=>Boolean(infotainment?.isOpen),onExit:()=>{renderAt(state.time);setPlaying(resumeStudio)}})
+  driving=createDrivingMode({renderer,studio:scene,car,audio,reducedMotion:reducedMotion.matches,onDashboard:()=>infotainment?.drawTexture(),onSceneRender:(scene,camera)=>cockpitScreen?.render(scene,camera,{interactive:Boolean(infotainment?.isOpen),allowed:driving.screenVisible}),isScreenOpen:()=>Boolean(infotainment?.isOpen),onExit:()=>{renderAt(state.time);setPlaying(resumeStudio)}})
   let screenResume=false
   const carPreview=createCarPreview(renderer,car,scene.environment)
   infotainment=createInfotainment({car,audio,cabinLight,carPreview,getTelemetry:()=>driving.active?driving.telemetry:null,
     onVisualChange:()=>{if(driving.active)driving.resize();else renderAt(state.time)},
-    onOpen:()=>{screenResume=playing;setPlaying(false);doorTween?.kill();if(driving.active)driving.pause(true)},
-    onClose:()=>{if(!driving.active)setPlaying(screenResume)},
+    onOpen:()=>{screenResume=playing;setPlaying(false);doorTween?.kill();$('#experience').dataset.screenFocused='true';if(driving.active){driving.pause(true);driving.focusScreen(true)}else{screenStudioFocus=true;doorOverride=0;userAzimuth=0;userElevation=0;seek(47)}},
+    onClose:()=>{$('#experience').dataset.screenFocused='false';if(driving.active)driving.focusScreen(false);else{screenStudioFocus=false;renderAt(state.time);setPlaying(screenResume)}},
     onReset:()=>{if(driving.active)driving.reset()},
     onDoors:()=>{
       if(!driving.active){$('#doors').click();return car.doors[0].pivot.rotation.z<.5}
@@ -359,8 +364,11 @@ function init() {
       car.doors.forEach(({pivot,sign})=>{pivot.rotation.z=opened?1.17:0;pivot.rotation.x=opened?sign*.24:0;pivot.rotation.y=opened?sign*.1:0});audio.door();driving.resize();return opened
     },
   })
+  cockpitScreen=createCockpitScreen(car,infotainment.element,$('#experience'))
+  $('#open-screen').removeAttribute('aria-haspopup');$('#open-screen').setAttribute('aria-controls','infotainment')
   $('#open-screen').addEventListener('click',()=>infotainment.open())
   addEventListener('keydown',event=>{if(event.code==='KeyE'&&!event.repeat&&!document.querySelector('dialog[open]')&&!/INPUT|TEXTAREA|SELECT/.test(event.target.tagName)){event.preventDefault();infotainment.open()}})
+  addEventListener('keydown',event=>{if(event.code==='KeyH'&&!infotainment.isOpen&&!/INPUT|TEXTAREA|SELECT/.test(event.target.tagName)){event.preventDefault();infotainment.showControls()}})
   const screenRay=new THREE.Raycaster(),screenPointer=new THREE.Vector2()
   let screenPointerStart=null
   canvas.addEventListener('pointerdown',event=>screenPointerStart=[event.clientX,event.clientY])

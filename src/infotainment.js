@@ -21,7 +21,8 @@ export function createInfotainment({car,audio,cabinLight,carPreview,onOpen,onClo
   let storage
   try{storage=localStorage}catch{storage={getItem:()=>null}}
   const settings=readCabinSettings(storage)
-  const dialog=document.createElement('dialog');dialog.id='infotainment';dialog.setAttribute('aria-labelledby','os-title')
+  const dialog=document.createElement('section');dialog.id='infotainment';dialog.setAttribute('aria-labelledby','os-title');dialog.setAttribute('aria-label','pantalla del habitáculo')
+  let focused=false
   dialog.innerHTML=`
     <div class="os-shell">
       <header class="os-topbar"><div class="os-brand"><span class="os-mark">r/</span><h2 id="os-title">roadster <span>os</span></h2><span class="os-build">experimental / 01</span></div><div class="os-system"><span class="os-park">p · estacionado</span><time id="os-clock"></time><button id="os-expand" aria-label="alternar pantalla completa">${icon('expand')}</button><button id="os-close" autofocus aria-label="cerrar pantalla y volver al coche">${icon('close')}</button></div></header>
@@ -64,18 +65,28 @@ export function createInfotainment({car,audio,cabinLight,carPreview,onOpen,onClo
   }
   function stopBrowser() {$('#os-browser-frame').replaceChildren();$('.os-browser-preview').hidden=true}
   function open() {
-    if(dialog.open)return
-    returnFocus=document.activeElement;onOpen();carPreview.draw();dialog.showModal();document.body.classList.add('os-open');update();$('#os-close').focus()
+    if(focused)return
+    returnFocus=document.activeElement;focused=true;onOpen();carPreview.draw();update();$('#os-close').focus()
   }
-  function close() {dialog.close()}
-  function destroyYouTube() {playerGeneration++;player?.destroy?.();player=null;$('#os-youtube-host').replaceChildren();$('#os-video-empty').hidden=false;$('#os-video-form').removeAttribute('aria-busy');$('#os-video-status').textContent='youtube se conecta solo al cargar un vídeo.'}
-  dialog.addEventListener('close',()=>{
-    destroyYouTube();localPlayer.pause();stopBrowser();document.body.classList.remove('os-open','os-expanded');$('#os-expand').setAttribute('aria-pressed','false');onClose();drawTexture();onVisualChange()
+  function close() {
+    if(!focused)return
+    focused=false;onClose();drawTexture();onVisualChange()
     if(returnFocus?.isConnected)returnFocus.focus()
-  })
-  dialog.addEventListener('keydown',event=>event.stopPropagation())
+  }
+  function destroyYouTube() {playerGeneration++;player?.destroy?.();player=null;$('#os-youtube-host').replaceChildren();$('#os-video-empty').hidden=false;$('#os-video-form').removeAttribute('aria-busy');$('#os-video-status').textContent='youtube se conecta solo al cargar un vídeo.'}
+  dialog.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();close()}event.stopPropagation()})
   $('#os-close').addEventListener('click',close)
-  $('#os-expand').addEventListener('click',()=>{document.body.classList.toggle('os-expanded');$('#os-expand').setAttribute('aria-pressed',String(document.body.classList.contains('os-expanded')))})
+  $('#os-expand').hidden=true
+  $('#os-close').setAttribute('aria-label','volver a la vista de conducción')
+  $('#os-map-title').textContent='navegación'
+  $('#os-web-title').textContent='navegador'
+  $('#os-video-title').textContent='youtube'
+  $('#os-media-title').textContent='biblioteca'
+  $('#os-car-title').textContent='dinámica y controles'
+  const controls=document.createElement('div');controls.className='os-game-controls'
+  controls.innerHTML='<p>wasd / flechas · conducir &nbsp; 1 / 3 / c · cámara &nbsp; shift · empuje</p><p>espacio · elevación &nbsp; i / k · cabeceo &nbsp; j / l · giro aéreo &nbsp; x · freno de mano</p><p>f · performance / thrust / rocket &nbsp; q · succión &nbsp; n · cinco coches &nbsp; v · camión &nbsp; g · loop &nbsp; b · circuito</p><p>e · pantalla &nbsp; p · pausa &nbsp; r · reversa &nbsp; t · reiniciar &nbsp; m · audio &nbsp; esc · salir</p><p id="os-game-status" role="status"></p>'
+  $('#os-panel-car').prepend(controls)
+  const airStatus=document.createElement('span');airStatus.id='os-air-status';airStatus.className='os-eyebrow';$('.os-vehicle').append(airStatus)
   dialog.querySelectorAll('[data-os-app]').forEach(button=>button.addEventListener('click',()=>switchApp(button.dataset.osApp)))
   function openExternal(url) {window.open(url,'_blank','noopener,noreferrer')}
   $('#os-maps-form').addEventListener('submit',event=>{event.preventDefault();openExternal(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent($('#os-destination').value.trim())}`)})
@@ -104,7 +115,7 @@ export function createInfotainment({car,audio,cabinLight,carPreview,onOpen,onClo
     $('#os-youtube-external').href=`https://www.youtube.com/watch?v=${video.id}&t=${video.start}`
     try {
       const YT=await loadYouTube()
-      if(!dialog.open||generation!==playerGeneration)return
+      if(generation!==playerGeneration)return
       const host=document.createElement('div');$('#os-youtube-host').append(host);$('#os-video-empty').hidden=true
       player=new YT.Player(host,{host:'https://www.youtube-nocookie.com',width:'100%',height:'100%',videoId:video.id,playerVars:{origin:location.origin,playsinline:1,autoplay:0,start:video.start,rel:0},events:{
         onReady:()=>{if(generation!==playerGeneration)return;$('#os-video-status').textContent='listo / pulsa reproducir en el vídeo';const iframe=player.getIframe();iframe.title='reproductor de youtube';iframe.referrerPolicy='strict-origin-when-cross-origin';if(app!=='video')player.pauseVideo()},
@@ -147,27 +158,38 @@ export function createInfotainment({car,audio,cabinLight,carPreview,onOpen,onClo
     for(const [i,label] of ['ruta','web','vídeo','media','coche'].entries()){ctx.fillStyle=['map','web','video','media','car'][i]===app?'#ff604b':'#c6d0d9';ctx.font='15px sans-serif';ctx.fillText(label,20+i*100,250)}
     ctx.fillStyle='#a9bcc9';ctx.font='11px monospace';ctx.fillText(settings.temperature+'°  /  tocar para explorar',20,276)
     texture.needsUpdate=true
+    car.driverScreens?.forEach((texture,index)=>{
+      const c=texture.image.getContext('2d');c.fillStyle='#050b10';c.fillRect(0,0,512,192);c.fillStyle='#e9f0f3';c.font='95px sans-serif';c.fillText(index?String(Math.round(Math.abs(state.speed)*3.6)):state.gear===-1?'r':'d',20,116)
+      c.font='22px monospace';c.fillStyle='#8dabbc';c.fillText(index?'km/h':state.augment||'studio',220,112);c.fillStyle='#ff6349';c.fillRect(20,152,472*(state.air===undefined?1:state.air/4),5);texture.needsUpdate=true
+    })
   }
   function update() {
     const state=sample(),stamp=performance.now()
     if(stamp-lastSample>500){history.push(Math.abs(state.speed)*3.6);if(history.length>60)history.shift();lastSample=stamp}
-    if(dialog.open){
+    {
       $('#os-clock').textContent=new Intl.DateTimeFormat('es',{hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date())
-      $('.os-park').textContent=state.active?'p · circuito en pausa':'p · estudio'
+      $('.os-park').textContent=state.active?(state.paused?'p · pausa':state.gear===-1?'r · reversa':'d · conducción'):'p · estudio'
       $('#os-speed').textContent=Math.round(Math.abs(state.speed)*3.6)
       $('#os-distance').replaceChildren(document.createTextNode((Math.abs(state.distance)/1000).toFixed(2)+' '));const unit=document.createElement('small');unit.textContent='km';$('#os-distance').append(unit)
       $('#os-surface').textContent=state.offroad?'grava':'asfalto'
-      for(const id of ['os-map-route','os-map-route-border'])$('#'+id).setAttribute('d',document.querySelector('#drive-map-track').getAttribute('d'))
-      $('#os-map-location').setAttribute('cx',(state.x+300)/600*160);$('#os-map-location').setAttribute('cy',(state.z+240)/480*118)
+      const provingGround=state.active&&state.area!=='circuit'
+      const route=provingGround?'M8 22H152M8 47H152M8 72H152M8 97H152':document.querySelector('#drive-map-track').getAttribute('d')
+      for(const id of ['os-map-route','os-map-route-border'])$('#'+id).setAttribute('d',route)
+      $('#os-map-location').setAttribute('cx',provingGround?8+(state.x-600)/2200*144:(state.x+300)/600*160);$('#os-map-location').setAttribute('cy',provingGround?20+(state.z+75)/150*80:(state.z+240)/480*118)
+      $('.os-map-tag').firstChild.textContent=provingGround?'proving ground':'test valley'
+      $('.os-map-tag span').textContent=provingGround?'saltos / velocidad / exhibición':'/ circuito cerrado'
       $('#os-map-location').toggleAttribute('hidden',!state.active)
       $('#os-heading').textContent='rumbo '+String(Math.round(((state.heading*180/Math.PI)%360+360)%360)%360).padStart(3,'0')+'°'
-      $('#os-lap').textContent=state.active?document.querySelector('#drive-lap').textContent:'estudio / sin conducción'
+      $('#os-lap').textContent=provingGround?`saltos ${state.jumps} / vehículos ${state.cleared}`:state.active?document.querySelector('#drive-lap').textContent:'estudio / sin conducción'
       for(const [id,value,unit] of [['acceleration',state.acceleration.toFixed(2),'m/s²'],['lateral',(state.lateral/9.81).toFixed(2),'g'],['steer',(state.steer*180/Math.PI).toFixed(1),'°'],['slip',Math.round(Math.min(1,state.slip)*100),'%']]){$('#os-'+id).replaceChildren(document.createTextNode(value+' '));const small=document.createElement('small');small.textContent=unit;$('#os-'+id).append(small)}
       $('#os-speed-history').setAttribute('d',history.map((speed,index)=>`${index?'L':'M'}${index/59*600},${96-Math.min(250,speed)/250*90}`).join(' '))
       $('#os-audio').setAttribute('aria-pressed',String(audio.enabled));$('#os-audio').setAttribute('aria-label',audio.enabled?'silenciar sonido del coche':'activar sonido del coche')
       doorOpen=car.doors[0].pivot.rotation.z>.5
       $('#os-door-control').querySelector('span').textContent=doorOpen?'cerrar puertas':'abrir puertas'
       $('#os-reset-car').disabled=!state.active
+      $('#os-game-status').textContent=state.notice||'simulación de conducción / parámetros de juego'
+      $('#os-air-status').textContent=state.active?`${state.augment} / aire ${Math.round(state.air/4*100)}% / ${state.grounded?'suelo':'vuelo'} / superados ${state.cleared}`:'estudio independiente'
+      $('#os-surface').textContent=state.active?state.grounded?(state.offroad?'grava':'asfalto'):`${Math.max(0,state.y).toFixed(1)} m`:'estudio'
     }
     if(stamp-lastTexture>250&&!document.hidden){drawTexture();lastTexture=stamp}
   }
@@ -175,5 +197,5 @@ export function createInfotainment({car,audio,cabinLight,carPreview,onOpen,onClo
   addEventListener('pagehide',event=>{if(!event.persisted)clearInterval(timer);destroyYouTube();clearLocal();stopBrowser()})
   // Keep the canvas screen in sync even when the full-size interface is closed.
   applySettings()
-  return {open,close,update,drawTexture,get isOpen(){return dialog.open}}
+  return {element:dialog,open,close,update,drawTexture,showControls(){open();switchApp('car')},get isOpen(){return focused}}
 }
