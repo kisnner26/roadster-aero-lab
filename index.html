@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#080a0c">
-  <meta name="description" content="Un estudio interactivo de forma, flujo y vuelo. Tesla Roadster y Falcon Heavy en una experiencia tridimensional.">
+  <meta name="description" content="Reconstrucción tridimensional del concepto Roadster: carrocería en cuña, puertas elevables, habitáculo y flujo aerodinámico.">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="canonical" href="https://kisnner26.github.io/roadster-aero-lab/">
   <meta property="og:title" content="roadster — form / flow / flight">
@@ -15,32 +15,32 @@
   <title>roadster — form / flow / flight</title>
 </head>
 <body>
-  <main id="experience" data-composition-id="roadster-engineering" data-width="1920" data-height="1080" data-duration="56" aria-label="estudio tridimensional del tesla roadster">
-    <canvas id="viewport" aria-label="modelo tridimensional interactivo del tesla roadster y falcon heavy"></canvas>
+  <main id="experience" data-composition-id="roadster-engineering" data-width="1920" data-height="1080" data-duration="70" aria-label="reconstrucción tridimensional del concepto roadster">
+    <canvas id="viewport" aria-label="modelo tridimensional del concepto roadster reconstruido desde referencias visuales"></canvas>
     <div class="vignette" aria-hidden="true"></div>
     <div class="frame-corner top-left" aria-hidden="true"></div><div class="frame-corner bottom-right" aria-hidden="true"></div>
     <header class="masthead">
       <a class="wordmark" href="#" aria-label="volver a la escena inicial">roadster<span class="wordmark-rule"></span><span class="wordmark-small">aero lab</span></a>
-      <span class="edition">independent engineering study / 026</span>
-      <button class="source-button" id="open-sources" aria-label="abrir fuentes y datos del estudio">datos <span>↗</span></button>
+      <span class="edition">reference concept study / 026</span>
+      <div class="header-actions"><button class="source-button" id="doors" aria-label="abrir puertas" aria-pressed="false">puertas</button><button class="source-button" id="open-sources" aria-label="abrir fuentes y datos del estudio">datos <span>↗</span></button></div>
     </header>
     <div class="chapter-context"><span class="status-light"></span><span id="chapter-kicker">01 / surface study</span><span class="context-rule"></span><span id="view-mode">perspective</span></div>
-    <div class="title-block" aria-hidden="true"><span class="eyebrow" id="eyebrow">tesla roadster / first generation</span><h1 id="chapter-title">form.</h1><div class="title-subline"><span id="chapter-subtitle">every line has a purpose.</span><span class="short-rule"></span></div></div>
+    <div class="title-block" aria-hidden="true"><span class="eyebrow" id="eyebrow">roadster / reference concept</span><h1 id="chapter-title">form.</h1><div class="title-subline"><span id="chapter-subtitle">wedge / canopy / aero</span><span class="short-rule"></span></div></div>
     <svg id="annotations" aria-hidden="true"><defs><marker id="dim-arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto-start-reverse"><path d="M6 0L0 3 6 6" fill="none" stroke="currentColor" stroke-width="1"/></marker></defs><g id="dimension-lines"></g></svg>
-    <div class="coordinate-label" aria-hidden="true"><svg viewBox="0 0 70 70"><path d="M20 50V9M20 50H63M20 50L44 29"/><text x="15" y="8">y</text><text x="64" y="54">x</text><text x="47" y="27">z</text></svg><span id="coordinate-mode">world / meters</span></div>
-    <aside class="telemetry" aria-label="datos de la escena"><span class="panel-label" id="data-title">vehicle envelope</span><div class="metric"><span id="metric-a-label">length</span><strong id="metric-a">3,946 <small>mm</small></strong></div><div class="metric"><span id="metric-b-label">wheelbase</span><strong id="metric-b">2,351 <small>mm</small></strong></div><div class="metric"><span id="metric-c-label">height</span><strong id="metric-c">1,127 <small>mm</small></strong></div><div class="telemetry-foot"><span class="status-light"></span><span id="data-foot">public dimensional reference</span></div></aside>
+    <div class="coordinate-label" aria-hidden="true"><svg viewBox="0 0 70 70"><path d="M20 50V9M20 50H63M20 50L44 29"/><text x="15" y="8">y</text><text x="64" y="54">x</text><text x="47" y="27">z</text></svg><span id="coordinate-mode">normalized / body length</span></div>
+    <aside class="telemetry" aria-label="datos de la escena"><span class="panel-label" id="data-title">reconstructed proportions</span><div class="metric"><span id="metric-a-label">body length</span><strong id="metric-a">1.000 <small>l</small></strong></div><div class="metric"><span id="metric-b-label">wheelbase</span><strong id="metric-b">0.600 <small>l</small></strong></div><div class="metric"><span id="metric-c-label">closed height</span><strong id="metric-c">0.262 <small>l</small></strong></div><div class="telemetry-foot"><span class="status-light"></span><span id="data-foot">image reference / not factory dimensions</span></div></aside>
     <div class="gesture-hint" id="gesture-hint"><span>↔</span> arrastra para explorar</div>
     <footer class="control-deck">
-      <div class="playback"><button id="play" class="icon-button" aria-label="pausar recorrido" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path id="play-icon" d="M7 5v10M13 5v10"/></svg></button><span id="timecode">00:00</span><span class="time-divider">/</span><span>00:56</span></div>
-      <nav class="chapters" aria-label="capítulos"><button data-chapter="0" aria-current="step"><span>01</span> form</button><button data-chapter="1"><span>02</span> structure</button><button data-chapter="2"><span>03</span> flow</button><button data-chapter="3"><span>04</span> flight</button></nav>
+      <div class="playback"><button id="play" class="icon-button" aria-label="pausar recorrido" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path id="play-icon" d="M7 5v10M13 5v10"/></svg></button><span id="timecode">00:00</span><span class="time-divider">/</span><span>01:10</span></div>
+      <nav class="chapters" aria-label="capítulos"><button data-chapter="0" aria-current="step"><span>01</span> form</button><button data-chapter="1"><span>02</span> structure</button><button data-chapter="2"><span>03</span> flow</button><button data-chapter="3"><span>04</span> cabin</button><button data-chapter="4"><span>05</span> flight</button></nav>
       <button id="sound" class="icon-button" aria-label="activar sonido ambiental" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10h4l5-4v12l-5-4H4zM17 9l5 6M22 9l-5 6" id="sound-icon"/></svg></button>
-      <div class="scrubber"><label class="sr-only" for="timeline">posición del recorrido</label><input id="timeline" type="range" min="0" max="56" step="0.01" value="0"><div class="scrubber-fill" id="scrubber-fill"></div><i></i><i></i><i></i></div>
+      <div class="scrubber"><label class="sr-only" for="timeline">posición del recorrido</label><input id="timeline" type="range" min="0" max="70" step="0.01" value="0"><div class="scrubber-fill" id="scrubber-fill"></div><i></i><i></i><i></i><i></i></div>
     </footer>
     <div class="loader" id="loader" role="status"><span>roadster</span><div class="loader-line"></div><small>initializing study</small></div>
     <p class="fallback" id="fallback" hidden>tu navegador no pudo iniciar la escena 3d. activa la aceleración gráfica y vuelve a cargar.</p>
     <p class="sr-only" id="scene-announcement" aria-live="polite"></p>
   </main>
-  <dialog id="sources"><div class="dialog-heading"><span>study documentation / 026</span><button id="close-sources" class="icon-button" aria-label="cerrar datos">×</button></div><h2>la forma, documentada.</h2><p>reconstrucción visual independiente del roadster de primera generación. las cotas provienen de documentación pública; la geometría es interpretativa y no constituye un modelo cad de fabricación.</p><dl><div><dt>longitud</dt><dd>3,946 mm</dd></div><div><dt>distancia entre ejes</dt><dd>2,351 mm</dd></div><div><dt>altura</dt><dd>1,127 mm</dd></div><div><dt>ancho con espejos</dt><dd>1,851 mm</dd></div><div><dt>falcon heavy / altura</dt><dd>70 m</dd></div></dl><p>el flujo es una visualización cualitativa, no un cálculo cfd. el roadster lanzado en 2018 corresponde a la primera generación; la misión se representa de manera artística.</p><div class="source-links"><a href="https://service.tesla.com/docs/Public/Roadster/Owner/Roadster_2.5_Owners_Manual.pdf" target="_blank" rel="noopener noreferrer">tesla / manual roadster 2.5 ↗</a><a href="https://www.spacex.com/vehicles/falcon-heavy/" target="_blank" rel="noopener noreferrer">spacex / falcon heavy ↗</a><a href="https://github.com/kisnner26/roadster-aero-lab" target="_blank" rel="noopener noreferrer">código y documentación ↗</a></div></dialog>
+  <dialog id="sources"><div class="dialog-heading"><span>reference documentation / 026</span><button id="close-sources" class="icon-button" aria-label="cerrar datos">×</button></div><h2>de la referencia al volumen.</h2><p>reconstrucción independiente basada en las imágenes proporcionadas: carrocería en cuña, cabina cerrada, puertas elevables, alerón y trasera con cuatro boquillas. no se ha verificado que este diseño corresponda a un vehículo oficial de tesla.</p><dl><div><dt>longitud de carrocería</dt><dd>1.000 l</dd></div><div><dt>distancia entre ejes</dt><dd>0.600 l</dd></div><div><dt>altura con puertas cerradas</dt><dd>0.262 l</dd></div><div><dt>ancho de carrocería</dt><dd>0.440 l</dd></div></dl><p>l es la longitud de la carrocería reconstruida. las relaciones son estimaciones del modelo visual, no cotas oficiales ni planos de fabricación. el flujo y la propulsión son representaciones conceptuales; este automóvil no es el roadster original lanzado en 2018.</p><div class="source-links"><a href="https://www.youtube.com/shorts/oCvC70oIS5w" target="_blank" rel="noopener noreferrer">vídeo de referencia proporcionado ↗</a><a href="https://www.tesla.com/roadster" target="_blank" rel="noopener noreferrer">tesla / roadster oficial ↗</a><a href="https://github.com/kisnner26/roadster-aero-lab" target="_blank" rel="noopener noreferrer">código y documentación ↗</a></div></dialog>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

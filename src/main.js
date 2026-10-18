@@ -1,12 +1,12 @@
 import './styles.css'
 import * as THREE from 'three'
 import { gsap } from 'gsap'
-import { createRoadster, createFalcon } from './roadster.js'
+import { createRoadster, referenceEnvelope } from './roadster.js'
 
 const $ = selector => document.querySelector(selector)
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
 const canvas = $('#viewport')
-const duration = 56
+const duration = 70
 let renderer
 try {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' })
@@ -58,11 +58,14 @@ function init() {
 
   const car = createRoadster()
   scene.add(car.root)
+  const cabinLight=new THREE.PointLight(0xe7f1ff,.85,2.1,1.7)
+  cabinLight.position.set(.05,1.02,0);car.root.add(cabinLight)
   const solidMaterials = new Map()
   car.root.traverse(object => {
     if (!object.isMesh) return
     const materials = Array.isArray(object.material) ? object.material : [object.material]
     materials.forEach(material => {
+      if(material===car.plumeMaterial)return
       if (!solidMaterials.has(material)) solidMaterials.set(material, material.opacity)
       material.transparent = true
     })
@@ -91,12 +94,6 @@ function init() {
   scene.add(flow.root)
   const space = createSpace()
   scene.add(space.root)
-  const rocket = createFalcon()
-  rocket.scale.setScalar(.55)
-  rocket.position.set(3.1,.2,-3)
-  scene.add(rocket)
-  const rocketMaterials = new Set()
-  rocket.traverse(object => { if (object.isMesh) { object.material.transparent = true; rocketMaterials.add(object.material) } })
   const state = { time: 0 }
   const timeline = gsap.timeline({ paused: true }).to(state, { time: duration, duration, ease: 'none', onUpdate: () => renderAt(state.time) })
   window.__timelines = window.__timelines || {}
@@ -107,24 +104,31 @@ function init() {
 
   let width = innerWidth, height = innerHeight, mobile = width < 600
   let activeChapter = -1, playing = !reducedMotion.matches, frame = 0, lastStamp = 0, pointerDown = false
-  let userAzimuth = 0, userElevation = 0, dragX = 0, dragY = 0
+  let userAzimuth = 0, userElevation = 0, dragX = 0, dragY = 0, doorOverride = null
+  let doorTween=null
   const chapters = [
-    { title: 'form.', kicker: '01 / surface study', subtitle: 'every line has a purpose.', mode: 'perspective', eyebrow: 'tesla roadster / first generation', label: 'vehicle envelope', metrics: [['length','3,946','mm'],['wheelbase','2,351','mm'],['height','1,127','mm']], foot: 'public dimensional reference' },
-    { title: 'structure.', kicker: '02 / dimensional study', subtitle: 'beneath the surface.', mode: 'section / wireframe', eyebrow: 'geometry / reconstructed', label: 'dimensional reference', metrics: [['length','3,946','mm'],['width / mirrors','1,851','mm'],['clearance','130','mm']], foot: 'interpretive surface geometry' },
+    { title: 'form.', kicker: '01 / reference reconstruction', subtitle: 'wedge / canopy / aero', mode: 'surface perspective', eyebrow: 'roadster / reference concept', label: 'reconstructed proportions', metrics: [['body length','1.000','l'],['wheelbase','0.600','l'],['closed height','0.262','l']], foot: 'image reference / not factory dimensions' },
+    { title: 'structure.', kicker: '02 / proportional study', subtitle: 'surface / section / envelope', mode: 'section / wireframe', eyebrow: 'geometry / reconstructed', label: 'normalized envelope', metrics: [['body length','1.000','l'],['body width','0.440','l'],['closed height','0.262','l']], foot: 'closed configuration / normalized to length' },
     { title: 'flow.', kicker: '03 / aerodynamic study', subtitle: 'the invisible, made visible.', mode: 'streamline field', eyebrow: 'air / surface interaction', label: 'flow visualization', metrics: [['field','3d',''],['flow','→','x axis'],['model','qual.','']], foot: 'qualitative / non-cfd' },
-    { title: 'flight.', kicker: '04 / beyond the atmosphere', subtitle: 'a different kind of road.', mode: 'orbital perspective', eyebrow: 'falcon heavy / demo mission', label: 'flight reference', metrics: [['launch','06.02','2018'],['vehicle height','70','m'],['trajectory','solar','orbit']], foot: 'artistic mission reconstruction' },
+    { title: 'cabin.', kicker: '04 / interior architecture', subtitle: 'yoke / interface / light', mode: 'interior perspective', eyebrow: 'cockpit / reference reconstruction', label: 'cabin architecture', metrics: [['steering','yoke',''],['display','central',''],['trim','light','']], foot: 'visual reconstruction from supplied interior' },
+    { title: 'flight.', kicker: '05 / propulsion concept', subtitle: 'aero / thrust / altitude', mode: 'concept visualization', eyebrow: 'roadster / speculative propulsion', label: 'visual concept', metrics: [['rear nozzles','04',''],['diffuser','04','channels'],['study','visual','']], foot: 'speculative scene / not a flight simulation' },
   ]
   const cameraFrames = [
-    [0,[-5.4,2.65,6.7],[-.35,.47,0]],
-    [12,[-3.9,1.9,6.4],[-.3,.48,0]],
-    [16,[.2,3.55,7.05],[-.25,.44,0]],
-    [22,[.1,1.3,7.8],[-.3,.5,0]],
-    [26,[.1,4.5,6.6],[-.2,.3,0]],
-    [30,[-4.6,2.6,7],[-.3,.45,0]],
-    [40,[-2.4,1.65,7.8],[-.2,.45,0]],
-    [45,[-4.5,3.1,8.3],[.1,.85,0]],
-    [54,[-4.2,2.4,7.4],[.1,1.05,0]],
-    [56,[-5.4,2.65,6.7],[-.35,.47,0]],
+    [0,[-5.8,2.6,7.4],[-.2,.55,0]],
+    [8,[-5.1,2.1,7.4],[-.2,.7,0]],
+    [12,[-4.4,1.9,7.3],[-.2,.55,0]],
+    [17,[.1,2.3,8.5],[-.1,.45,0]],
+    [23,[.2,5.7,5.5],[-.1,.4,0]],
+    [28,[-4.8,2.8,7.3],[-.1,.5,0]],
+    [35,[4.7,2.1,7.3],[.3,.55,0]],
+    [39,[7.4,1.3,.1],[.5,.5,0]],
+    [42,[3.1,2.4,4.4],[0,.7,0]],
+    [45,[.98,1.01,.03],[-.75,.75,0]],
+    [52,[.92,1.015,-.08],[-.75,.76,.08]],
+    [56,[4.8,2.2,7.8],[.2,.75,0]],
+    [60,[6.4,2.6,7.4],[.2,1.1,0]],
+    [67,[5.8,2.2,6.9],[.2,1.1,0]],
+    [70,[-5.8,2.6,7.4],[-.2,.55,0]],
   ]
   const annotations = $('#dimension-lines')
   const annotationNodes = []
@@ -147,6 +151,7 @@ function init() {
 
   function updateChapter(index) {
     if (index === activeChapter) return
+    if(doorTween){doorTween.kill();doorTween=null;doorOverride=null}
     activeChapter = index
     $('#experience').dataset.activeChapter=String(index)
     const data = chapters[index]
@@ -187,19 +192,22 @@ function init() {
 
   function renderAt(time) {
     const t=THREE.MathUtils.clamp(time,0,duration)
-    const chapter=Math.min(3,Math.floor(t/14))
+    const chapter=Math.min(chapters.length-1,Math.floor(t/14))
     updateChapter(chapter)
     let k=0
     while(k<cameraFrames.length-2 && t>cameraFrames[k+1][0])k++
     const a=cameraFrames[k],b=cameraFrames[k+1],blend=smooth(a[0],b[0],t)
     position.fromArray(a[1]).lerp(new THREE.Vector3(...b[1]),blend)
     target.fromArray(a[2]).lerp(new THREE.Vector3(...b[2]),blend)
+    const interior=smooth(42,45,t)*(1-smooth(52,55,t))
+    car.wheels.visible=interior<.95
+    camera.fov=THREE.MathUtils.lerp(35,73,interior)
     if(mobile) {
-      position.sub(target).multiplyScalar(1.78).add(target)
+      position.sub(target).multiplyScalar(THREE.MathUtils.lerp(1.9,1,interior)).add(target)
       camera.setViewOffset(width,height,0,-height*.025,width,height)
     } else {
-      position.sub(target).multiplyScalar(width>1000?.88:1.16).add(target)
-      camera.setViewOffset(width,height,width*.015,-height*.025,width,height)
+      position.sub(target).multiplyScalar(THREE.MathUtils.lerp(width>1000?.91:1.22,1,interior)).add(target)
+      camera.setViewOffset(width,height,width*.015*(1-interior),-height*.025*(1-interior),width,height)
     }
     const offset=position.clone().sub(target)
     const spherical=new THREE.Spherical().setFromVector3(offset)
@@ -209,13 +217,19 @@ function init() {
     camera.lookAt(target)
     camera.updateMatrixWorld()
 
-    const wireAmount=smooth(12,16,t)*(1-smooth(26,29,t))
-    const flight=smooth(40,45,t)*(1-smooth(54,56,t))
+    const wireAmount=smooth(13,16,t)*(1-smooth(25,28,t))
+    const flight=smooth(56,60,t)*(1-smooth(67,70,t))
     const flowAmount=smooth(27,30,t)*(1-smooth(40,43,t))
+    const doorAmount=doorOverride===null?smooth(1,4,t)*(1-smooth(9,12,t)):doorOverride
+    car.doors.forEach(({pivot,sign})=>{pivot.rotation.z=doorAmount*1.17;pivot.rotation.x=sign*doorAmount*.24;pivot.rotation.y=sign*doorAmount*.1})
+    $('#doors').setAttribute('aria-pressed',String(doorAmount>.5))
+    $('#doors').setAttribute('aria-label',doorAmount>.5?'cerrar puertas':'abrir puertas')
+    car.wing.position.y=flowAmount*.055
     car.root.position.y=flight*.85
     car.root.rotation.set(flight*.06,flight*-.28,flight*-.1)
     car.root.updateMatrixWorld(true)
     solidMaterials.forEach((opacity,material)=>{ material.opacity=opacity*(1-wireAmount*.88);material.transparent=material.opacity<.999 })
+    car.plumeMaterial.uniforms.uOpacity.value=flight*.22
     car.wireMaterials.forEach(material=>{material.opacity=wireAmount*.17})
     car.sectionMaterial.opacity=wireAmount*.66
     car.wireMaterials.forEach((material,i)=>{if(i>0)material.opacity=wireAmount*.45})
@@ -234,21 +248,20 @@ function init() {
     space.atmosphere.material.uniforms.uOpacity.value=flight
     space.stars.material.opacity=flight*.8
     space.earth.rotation.y=t*.013
-    rocket.visible=flight>.001
-    rocket.position.y=.2+flight*.3
-    rocket.rotation.z=-flight*.12
-    rocketMaterials.forEach(material=>material.opacity=flight*.5)
     scene.fog.density=.024*(1-flight)
     const annotationOpacity=smooth(14,17,t)*(1-smooth(25,28,t))
     annotations.style.opacity=String(annotationOpacity)
     if(annotationOpacity>.001) {
-      dimension(0,[-1.973,.02,.96],[1.973,.02,.96],'3946 mm',mobile?20:38)
-      dimension(1,[-1.18,.02,.96],[1.171,.02,.96],'2351 mm',mobile?42:78)
-      dimension(2,[-2.1,.02,.96],[-2.1,1.127,.96],'1127 mm',mobile?-18:-32)
+      const half=referenceEnvelope.length/2
+      dimension(0,[-half,.02,1.06],[half,.02,1.06],'1.000 l',mobile?20:38)
+      dimension(1,[-1.34,.02,1.06],[1.36,.02,1.06],'0.600 l',mobile?42:78)
+      dimension(2,[-2.36,.02,1.06],[-2.36,referenceEnvelope.height,1.06],'0.262 l',mobile?-18:-32)
     }
     const titleFade=1-smooth(1,4,t%14)*.7
-    $('.title-block').style.opacity=String(titleFade)
-    $('#timecode').textContent=`00:${Math.floor(t).toString().padStart(2,'0')}`
+    $('.title-block').style.opacity=String(titleFade*(1-interior))
+    $('.telemetry').style.opacity=String(1-interior)
+    $('.coordinate-label').style.opacity=String(1-interior)
+    $('#timecode').textContent=`${Math.floor(t/60).toString().padStart(2,'0')}:${Math.floor(t%60).toString().padStart(2,'0')}`
     $('#scrubber-fill').style.transform=`scaleX(${t/duration})`
     $('#timeline').value=String(t)
     renderer.render(scene,camera)
@@ -276,14 +289,20 @@ function init() {
   $('#play').addEventListener('click',()=>setPlaying(!playing))
   $('#timeline').addEventListener('input',event=>{setPlaying(false);seek(Number(event.target.value))})
   document.querySelectorAll('[data-chapter]').forEach(button=>button.addEventListener('click',()=>{
-    userAzimuth=0;userElevation=0;seek([0,18,32,47][Number(button.dataset.chapter)])
+    doorTween?.kill();userAzimuth=0;userElevation=0;doorOverride=null;seek([5,18,35,47,62][Number(button.dataset.chapter)])
   }))
-  $('.wordmark').addEventListener('click',event=>{event.preventDefault();userAzimuth=0;userElevation=0;seek(0)})
+  $('.wordmark').addEventListener('click',event=>{event.preventDefault();doorTween?.kill();userAzimuth=0;userElevation=0;doorOverride=null;seek(0)})
+  $('#doors').addEventListener('click',()=>{
+    doorTween?.kill()
+    const control={amount:car.doors[0].pivot.rotation.z/1.17}
+    doorOverride=control.amount
+    doorTween=gsap.to(control,{amount:control.amount>.5?0:1,duration:reducedMotion.matches?0:.85,ease:'power2.inOut',onUpdate:()=>{doorOverride=control.amount;renderAt(state.time)}})
+  })
   addEventListener('keydown',event=>{
     if($('#sources').open || /INPUT|BUTTON|A/.test(document.activeElement.tagName))return
     if(event.code==='Space'){event.preventDefault();setPlaying(!playing)}
-    if(event.key==='ArrowRight'){event.preventDefault();seek((activeChapter+1)%4*14+.1)}
-    if(event.key==='ArrowLeft'){event.preventDefault();seek((activeChapter+3)%4*14+.1)}
+    if(event.key==='ArrowRight'){event.preventDefault();doorOverride=null;seek((activeChapter+1)%chapters.length*14+.1)}
+    if(event.key==='ArrowLeft'){event.preventDefault();doorOverride=null;seek((activeChapter+chapters.length-1)%chapters.length*14+.1)}
   })
   canvas.addEventListener('pointerdown',event=>{pointerDown=true;dragX=event.clientX;dragY=event.clientY;canvas.setPointerCapture(event.pointerId);$('#gesture-hint').style.opacity='0'})
   canvas.addEventListener('pointermove',event=>{
@@ -299,7 +318,7 @@ function init() {
   canvas.addEventListener('wheel',event=>{
     if(Math.abs(event.deltaY)<25 || event.timeStamp-wheelStamp<1000)return
     wheelStamp=event.timeStamp;userAzimuth=0;userElevation=0
-    seek(((activeChapter+(event.deltaY>0?1:3))%4)*14+.1)
+    doorOverride=null;seek(((activeChapter+(event.deltaY>0?1:chapters.length-1))%chapters.length)*14+.1)
   },{passive:true})
   document.addEventListener('visibilitychange',()=>{cancelAnimationFrame(frame);lastStamp=0;if(playing&&!document.hidden)frame=requestAnimationFrame(tick)})
   reducedMotion.addEventListener('change',()=>{if(reducedMotion.matches)setPlaying(false)})
