@@ -1,11 +1,12 @@
 import * as THREE from 'three'
 
 const v=(x,y,z)=>new THREE.Vector3(x,y,z)
-const paint=new THREE.MeshPhysicalMaterial({color:0xd6d9db,metalness:.62,roughness:.24,clearcoat:1,clearcoatRoughness:.14,envMapIntensity:.9,side:THREE.DoubleSide})
+const paint=new THREE.MeshPhysicalMaterial({color:0xeceae3,metalness:.38,roughness:.3,clearcoat:.8,clearcoatRoughness:.2,envMapIntensity:.9,side:THREE.DoubleSide})
 const carbon=new THREE.MeshStandardMaterial({color:0x080b0f,metalness:.3,roughness:.38,side:THREE.DoubleSide})
 const rubber=new THREE.MeshStandardMaterial({color:0x0e1013,roughness:.9})
 const alloy=new THREE.MeshStandardMaterial({color:0xd7dadd,metalness:.68,roughness:.26,envMapIntensity:1.1})
-const glass=new THREE.MeshPhysicalMaterial({color:0x493d2d,metalness:.12,roughness:.08,clearcoat:1,envMapIntensity:.9,side:THREE.FrontSide,transparent:true,opacity:.84,depthWrite:false})
+const glass=new THREE.MeshPhysicalMaterial({color:0x8a6a2c,metalness:.45,roughness:.07,clearcoat:1,envMapIntensity:1.3,side:THREE.FrontSide,transparent:true,opacity:.82,depthWrite:false})
+const titanium=new THREE.MeshStandardMaterial({color:0x6a7077,metalness:.75,roughness:.3})
 const upholstery=new THREE.MeshStandardMaterial({color:0xcbd1d5,roughness:.75,side:THREE.DoubleSide})
 const led=new THREE.MeshBasicMaterial({color:0xd2ebff})
 const redLed=new THREE.MeshBasicMaterial({color:0xff161b})
@@ -134,10 +135,10 @@ export function createRoadster({createCanvas=()=>document.createElement('canvas'
   box([.03,.014,.19],darkMetal,details,[2.305,.53,0])
   box([.19,.34,1.54],carbon,details,[2.23,.275,0])
   const exhaust=new THREE.Group();exhaust.visible=false;root.add(exhaust)
-  // Jet: narrow throat that swells and tapers, hot white-blue core, turbulent fringe and shock diamonds.
+  // Cold-gas thruster: white vapour jet with a bright throat, turbulent fringe and faint shock diamonds.
   const plumeMaterial=new THREE.ShaderMaterial({uniforms:{uOpacity:{value:0},uTime:{value:0}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,
     vertexShader:'varying vec2 vUv;varying float vFacing;void main(){vUv=uv;vFacing=abs(normalize(normalMatrix*normal).z);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-    fragmentShader:'uniform float uOpacity;uniform float uTime;varying vec2 vUv;varying float vFacing;void main(){float t=clamp(vUv.y,0.,1.);float turbulence=.5+.5*sin(vUv.x*62.8+t*22.-uTime*38.)*sin(vUv.x*37.7-t*13.+uTime*27.);float diamonds=pow(.5+.5*sin(t*46.-uTime*9.),4.)*exp(-t*2.6);float body=pow(clamp(vFacing,0.,1.),1.15)*pow(1.-t,1.5)*smoothstep(0.,.03,t)*(.5+.5*turbulence);float core=exp(-t*6.5)*pow(clamp(vFacing,0.,1.),2.);vec3 hot=vec3(.92,.96,1.);vec3 cool=vec3(.3,.5,1.);vec3 fringe=vec3(1.,.55,.28);vec3 col=mix(cool,hot,core);col=mix(col,fringe,smoothstep(.45,1.,t)*.55);col+=vec3(.75,.85,1.)*diamonds*.55;gl_FragColor=vec4(col,(body+core*.9+diamonds*.5*body)*uOpacity);}'})
+    fragmentShader:'uniform float uOpacity;uniform float uTime;varying vec2 vUv;varying float vFacing;void main(){float t=clamp(vUv.y,0.,1.);float turbulence=.5+.5*sin(vUv.x*62.8+t*22.-uTime*38.)*sin(vUv.x*37.7-t*13.+uTime*27.);float diamonds=pow(.5+.5*sin(t*46.-uTime*9.),4.)*exp(-t*2.6);float body=pow(clamp(vFacing,0.,1.),1.15)*pow(1.-t,1.5)*smoothstep(0.,.03,t)*(.5+.5*turbulence);float core=exp(-t*6.5)*pow(clamp(vFacing,0.,1.),2.);vec3 hot=vec3(1.);vec3 cool=vec3(.78,.86,.95);vec3 fringe=vec3(.62,.68,.74);vec3 col=mix(cool,hot,core);col=mix(col,fringe,smoothstep(.45,1.,t)*.55);col+=vec3(.9)*diamonds*.3;gl_FragColor=vec4(col,(body+core*.9+diamonds*.5*body)*uOpacity);}'})
   const plumeGeometry=length=>new THREE.LatheGeometry(Array.from({length:24},(_,k)=>{const y=k/23;return new THREE.Vector2(.05+.045*Math.pow(y,.55)-.04*Math.pow(y,3),y*length)}),28)
   for(const z of [-.6,-.2,.2,.6]) {
     const rim=mesh(new THREE.TorusGeometry(.068,.008,10,40),alloy,details,[2.36,.455,z]);rim.rotation.y=Math.PI/2
@@ -208,10 +209,10 @@ export function createRoadster({createCanvas=()=>document.createElement('canvas'
     }
     cylinder(.252,.018,carbon,wheel,[0,0,sign*.12])
     cylinder(.204,.014,darkMetal,wheel,[0,0,sign*.13])
-    const rim=mesh(new THREE.TorusGeometry(.272,.012,10,72),alloy,wheel,[0,0,sign*.137]);rim.scale.z=.6
+    const rim=mesh(new THREE.TorusGeometry(.272,.012,10,72),titanium,wheel,[0,0,sign*.137]);rim.scale.z=.6
     for(let i=0;i<5;i++) {
       const a=i/5*Math.PI*2,transform=([px,py])=>[Math.cos(a)*px-Math.sin(a)*py,Math.sin(a)*px+Math.cos(a)*py,sign*.148]
-      panel([[.035,-.025],[.115,-.06],[.265,.035],[.245,.10],[.085,.065]].map(transform),alloy,wheel)
+      panel([[.035,-.025],[.115,-.06],[.265,.035],[.245,.10],[.085,.065]].map(transform),titanium,wheel)
       for(let j=0;j<3;j++) {
         const b=a+j*.16
         const dot=mesh(new THREE.CircleGeometry(.006,6),carbon,wheel,[Math.cos(b)*.19,Math.sin(b)*.19,sign*.141]);if(sign<0)dot.rotation.y=Math.PI
