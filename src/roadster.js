@@ -5,7 +5,7 @@ const paint=new THREE.MeshPhysicalMaterial({color:0xc4c8cb,metalness:.58,roughne
 const carbon=new THREE.MeshStandardMaterial({color:0x080b0f,metalness:.3,roughness:.38,side:THREE.DoubleSide})
 const rubber=new THREE.MeshStandardMaterial({color:0x0e1013,roughness:.9})
 const alloy=new THREE.MeshStandardMaterial({color:0xd7dadd,metalness:.68,roughness:.26,envMapIntensity:1.1})
-const glass=new THREE.MeshPhysicalMaterial({color:0x080f17,metalness:.32,roughness:.13,clearcoat:.8,side:THREE.FrontSide,transparent:true,opacity:.96})
+const glass=new THREE.MeshPhysicalMaterial({color:0x211c16,metalness:.42,roughness:.12,clearcoat:.8,side:THREE.FrontSide,transparent:true,opacity:.96})
 const upholstery=new THREE.MeshStandardMaterial({color:0xcbd1d5,roughness:.75,side:THREE.DoubleSide})
 const led=new THREE.MeshBasicMaterial({color:0xd2ebff})
 const redLed=new THREE.MeshBasicMaterial({color:0xff161b})
@@ -125,7 +125,7 @@ export function createRoadster() {
   panel([[2.255,.725,-.91],[2.255,.725,.91],[2.255,.32,.94],[2.255,.32,-.94]],paint,shell)
   box([.04,.09,1.8],carbon,details,[2.275,.68,0])
   box([.046,.017,1.75],redLed,details,[2.3,.699,0])
-  box([.046,.018,1.75],carbon,details,[2.3,.653,0])
+  box([.046,.013,1.75],redLed,details,[2.3,.653,0])
   box([.025,.145,.34],upholstery,details,[2.285,.53,0])
   box([.03,.014,.19],darkMetal,details,[2.305,.53,0])
   box([.19,.34,1.54],carbon,details,[2.23,.275,0])
@@ -145,6 +145,12 @@ export function createRoadster() {
     const plume=mesh(new THREE.ConeGeometry(.09,.9,24,1,true),plumeMaterial,exhaust,[2.83,.455,z]);plume.rotation.z=Math.PI/2
   }
   for(const z of [-.8,-.4,0,.4,.8])box([.32,.27,.014],carbon,details,[2.24,.21,z])
+  const liftPlumeMaterial=plumeMaterial.clone();liftPlumeMaterial.uniforms.uOpacity.value=0
+  for(const x of [-1.1,1.1])for(const z of [-.73,.73]){
+    const nozzle=mesh(new THREE.TorusGeometry(.045,.006,8,24),darkMetal,details,[x,.22,z]);nozzle.rotation.x=Math.PI/2
+    mesh(new THREE.ConeGeometry(.11,.9,20,1,true),liftPlumeMaterial,exhaust,[x,-.2,z])
+  }
+  for(const sign of [-1,1]){const nozzle=mesh(new THREE.TorusGeometry(.035,.005,8,24),darkMetal,details,[.9,.52,sign*.957]);if(sign<0)nozzle.rotation.y=Math.PI}
   // active aero: a high, narrow wing with vertical endplates.
   const wing=new THREE.Group();root.add(wing)
   for(const sign of [-1,1]) {
@@ -164,12 +170,21 @@ export function createRoadster() {
   box([.027,.002,.32],redLed,details,[-.352,.708,0])
   const screenTexture=createScreenTexture()
   const screenSurface=mesh(new THREE.PlaneGeometry(.365,.205),new THREE.MeshBasicMaterial({map:screenTexture}),details,[-.349,.795,0]);screenSurface.rotation.y=Math.PI/2
+  const driverScreens=[]
+  for(const z of [-.4,.4]){
+    box([.025,.075,.2],carbon,details,[-.67,.79,z])
+    const canvas=document.createElement('canvas');canvas.width=512;canvas.height=192
+    const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;driverScreens.push(texture)
+    const face=mesh(new THREE.PlaneGeometry(.185,.065),new THREE.MeshBasicMaterial({map:texture}),details,[-.654,.794,z]);face.rotation.y=Math.PI/2
+  }
   const yokePoints=[[-.44,.84,.18],[-.44,.87,.2],[-.44,.87,.46],[-.44,.84,.49],[-.44,.72,.49],[-.44,.70,.46],[-.44,.70,.2],[-.44,.72,.18],[-.44,.84,.18]]
   const steering=new THREE.Group();steering.position.set(-.44,.785,.335);details.add(steering)
   line(yokePoints.map(([x,y,z])=>[x+.44,y-.785,z-.335]),.017,upholstery,steering)
   box([.036,.105,.15],carbon,steering,[.005,0,0])
+  const seats=[]
   for(const sign of [-1,1]) {
     const seat=new THREE.Group();seat.position.set(.25,.39,sign*.39);details.add(seat)
+    seats.push(seat)
     const base=mesh(new THREE.CapsuleGeometry(.18,.22,8,20),upholstery,seat,[-.02,.06,0]);base.rotation.z=Math.PI/2;base.scale.set(1,.65,1)
     const back=mesh(new THREE.CapsuleGeometry(.17,.22,8,20),upholstery,seat,[.25,.30,0]);back.scale.set(.5,1,1);back.rotation.z=-.12
     const insert=mesh(new THREE.CapsuleGeometry(.12,.15,6,16),carbon,seat,[.155,.29,0]);insert.scale.set(.14,1,1)
@@ -212,7 +227,7 @@ export function createRoadster() {
   const sections=new THREE.Group();root.add(sections)
   const sectionMaterial=new THREE.LineBasicMaterial({color:0x85b9d2,transparent:true,opacity:0})
   for(let i=6;i<loops.length;i+=14)sections.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(loops[i].map(p=>v(...p))),sectionMaterial))
-  return {root,shell,details,wheels,wireMaterials,sectionMaterial,paint,glass,wheelCenters,doors,wing,plumeMaterial,steering,screenTexture,screenSurface}
+  return {root,shell,details,wheels,wireMaterials,sectionMaterial,paint,glass,wheelCenters,doors,wing,plumeMaterial,liftPlumeMaterial,steering,screenTexture,screenSurface,driverScreens,seats}
 }
 
 function createScreenTexture() {
