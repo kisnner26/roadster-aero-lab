@@ -46,6 +46,7 @@ export function createInfotainment({car,audio,cabinLight,carPreview,onOpen,onClo
   $('.os-car-image img').replaceWith(carPreview.canvas)
   let app='map',player=null,playerGeneration=0,objectUrl=null,returnFocus=null,history=[],lastSample=0,doorOpen=false,lastTexture=0
   const localPlayer=$('#os-local-player')
+  localPlayer.setAttribute('controlslist','nofullscreen noremoteplayback');localPlayer.disablePictureInPicture=true
   const sample=()=>getTelemetry()||{speed:0,distance:0,steer:0,acceleration:0,lateral:0,slip:0,gear:1,x:0,z:0,heading:0,active:false}
   function saveSettings() {try{storage.setItem('roadster-cabin-v1',JSON.stringify(settings))}catch{ /* preferences are optional. */ }}
   function applySettings() {
@@ -117,8 +118,8 @@ export function createInfotainment({car,audio,cabinLight,carPreview,onOpen,onClo
       const YT=await loadYouTube()
       if(generation!==playerGeneration)return
       const host=document.createElement('div');$('#os-youtube-host').append(host);$('#os-video-empty').hidden=true
-      player=new YT.Player(host,{host:'https://www.youtube-nocookie.com',width:'100%',height:'100%',videoId:video.id,playerVars:{origin:location.origin,playsinline:1,autoplay:0,start:video.start,rel:0},events:{
-        onReady:()=>{if(generation!==playerGeneration)return;$('#os-video-status').textContent='listo / pulsa reproducir en el vídeo';const iframe=player.getIframe();iframe.title='reproductor de youtube';iframe.referrerPolicy='strict-origin-when-cross-origin';if(app!=='video')player.pauseVideo()},
+      player=new YT.Player(host,{host:'https://www.youtube-nocookie.com',width:'100%',height:'100%',videoId:video.id,playerVars:{origin:location.origin,playsinline:1,autoplay:0,start:video.start,rel:0,fs:0},events:{
+        onReady:()=>{if(generation!==playerGeneration)return;$('#os-video-status').textContent='listo / pulsa reproducir en el vídeo';const iframe=player.getIframe();iframe.title='reproductor de youtube';iframe.referrerPolicy='strict-origin-when-cross-origin';iframe.removeAttribute('allowfullscreen');iframe.allow='autoplay; encrypted-media; accelerometer; gyroscope';if(app!=='video')player.pauseVideo()},
         onStateChange:event=>{if(generation!==playerGeneration)return;const labels={0:'vídeo finalizado',1:'reproduciendo desde youtube',2:'reproducción en pausa',3:'cargando vídeo…',5:'listo / pulsa reproducir en el vídeo'};if(labels[event.data])$('#os-video-status').textContent=labels[event.data]},
         onError:event=>{if(generation!==playerGeneration)return;$('#os-video-error').textContent=[101,150].includes(event.data)?'el autor no permite reproducir este vídeo fuera de youtube. usa «abrir en youtube».':event.data===153?'youtube no pudo verificar este navegador. usa «abrir en youtube».':'youtube no pudo reproducir este vídeo. prueba otro enlace o ábrelo en youtube.';$('#os-video-status').textContent='reproducción no disponible'},
       }})
