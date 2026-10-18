@@ -4,6 +4,7 @@ import {screenFocusFov} from './cockpit-screen.js'
 import {stepExhibitionLoop,stuntLoop} from './stunt-physics.js'
 import {createCircuit} from './circuit.js'
 import {vehicleVisualTargets} from './vehicle-visuals.js'
+import {createGamepadInput} from './gamepad-input.js'
 
 const $=selector=>document.querySelector(selector)
 const heldKeys=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','ShiftLeft','ShiftRight','KeyX','KeyI','KeyK','KeyJ','KeyL'])
@@ -13,6 +14,7 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
   let world=null
   const camera=new THREE.PerspectiveCamera(74,1,.025,6000)
   const keys=new Set(),touch={throttle:0,brake:0,left:0,right:0}
+  const gamepad=createGamepadInput()
   const cameraPosition=new THREE.Vector3(),lookAt=new THREE.Vector3(),desiredCamera=new THREE.Vector3(),desiredTarget=new THREE.Vector3()
   const previousCarPosition=new THREE.Vector3(),cameraTranslation=new THREE.Vector3()
   let active=false,paused=false,exterior=false,raf=0,last=0,accumulator=0,state=createVehicleState(),lap=1,lastProgress=0,lapTime=0,dashTimer=0,viewReady=false
@@ -22,6 +24,7 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
 
   function clearInput() {
     keys.clear();Object.keys(touch).forEach(key=>touch[key]=0)
+    gamepad.reset()
     document.querySelectorAll('.is-held').forEach(button=>button.classList.remove('is-held'))
     dragging=false
   }
@@ -128,8 +131,9 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
     if(!active||paused||document.hidden)return
     onFrame(stamp)
     const dt=last?Math.min((stamp-last)/1000,.05):0;last=stamp;accumulator+=dt
-    const pad=navigator.getGamepads?.()[0]
-    const input={throttle:Math.max(touch.throttle,keys.has('KeyW')||keys.has('ArrowUp')?1:0,pad?.buttons[7]?.value||0),brake:Math.max(touch.brake,keys.has('KeyS')||keys.has('ArrowDown')?1:0,pad?.buttons[6]?.value||0),steer:(touch.right||keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(touch.left||keys.has('KeyA')||keys.has('ArrowLeft')?1:0)+(Math.abs(pad?.axes[0]||0)>.12?pad.axes[0]:0),handbrake:keys.has('KeyX'),boost:keys.has('ShiftLeft')||keys.has('ShiftRight')||pad?.buttons[0]?.pressed,lift:keys.has('Space')||pad?.buttons[1]?.pressed,pitch:(keys.has('KeyI')?1:0)-(keys.has('KeyK')?1:0),roll:(keys.has('KeyL')?1:0)-(keys.has('KeyJ')?1:0)}
+    const pad=gamepad.read(navigator.getGamepads?.()||[])
+    if(pad.disconnected){notice='mando desconectado / p: continuar';pause(true);return}
+    const input={throttle:Math.max(touch.throttle,keys.has('KeyW')||keys.has('ArrowUp')?1:0,pad.throttle),brake:Math.max(touch.brake,keys.has('KeyS')||keys.has('ArrowDown')?1:0,pad.brake),steer:THREE.MathUtils.clamp((touch.right||keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(touch.left||keys.has('KeyA')||keys.has('ArrowLeft')?1:0)+pad.steer,-1,1),handbrake:keys.has('KeyX'),boost:keys.has('ShiftLeft')||keys.has('ShiftRight')||pad.boost,lift:keys.has('Space')||pad.lift,pitch:(keys.has('KeyI')?1:0)-(keys.has('KeyK')?1:0),roll:(keys.has('KeyL')?1:0)-(keys.has('KeyJ')?1:0)}
     while(accumulator>=1/120){stepVehicle(state,input,1/120,world.nearest(state.x,state.z).distance);if(!stepExhibitionLoop(state,1/120))stepVertical(state,input,1/120,world.surface(state.x,state.z,state.heading));world.collision(state);accumulator-=1/120;lapTime+=1/120}
     if(state.y< -10||!Number.isFinite(state.x))reset()
     if(!dragging){headYaw*=Math.exp(-dt*3);headPitch*=Math.exp(-dt*3)}
