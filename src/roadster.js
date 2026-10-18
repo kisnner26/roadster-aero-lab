@@ -7,6 +7,8 @@ const rubber=new THREE.MeshStandardMaterial({color:0x0e1013,roughness:.9})
 const alloy=new THREE.MeshStandardMaterial({color:0xd7dadd,metalness:.68,roughness:.26,envMapIntensity:1.1})
 const glass=new THREE.MeshPhysicalMaterial({color:0x30230f,metalness:.55,roughness:.06,clearcoat:1,envMapIntensity:1.5,side:THREE.FrontSide,transparent:true,opacity:.9,depthWrite:false})
 const titanium=new THREE.MeshStandardMaterial({color:0x6a7077,metalness:.75,roughness:.3,side:THREE.DoubleSide})
+const spokeDark=new THREE.MeshStandardMaterial({color:0x15181c,metalness:.7,roughness:.32,side:THREE.DoubleSide})
+const discLight=new THREE.MeshStandardMaterial({color:0xc9ccd0,metalness:.6,roughness:.34})
 const upholstery=new THREE.MeshStandardMaterial({color:0xcbd1d5,roughness:.75,side:THREE.DoubleSide})
 const led=new THREE.MeshBasicMaterial({color:0xd2ebff})
 const redLed=new THREE.MeshBasicMaterial({color:0xff161b})
@@ -200,7 +202,7 @@ export function createRoadster({createCanvas=()=>document.createElement('canvas'
     line([[.18,.18,-.15],[.21,.38,-.15],[.24,.47,-.1]],.006,carbon,seat)
   }
   line([[-.72,.735,-.69],[-.72,.735,0],[-.72,.735,.69]],.003,redLed,details)
-  // turbine-inspired five swept spokes and actual recessed brake discs.
+  // six thin dark spokes over a light disc.
   const wheelCenters=[]
   for(const x of wheelX)for(const sign of [-1,1]) {
     const wheel=new THREE.Group();wheel.position.set(x,wheelRadius,sign*.914);wheels.add(wheel);wheelCenters.push(wheel)
@@ -208,15 +210,15 @@ export function createRoadster({createCanvas=()=>document.createElement('canvas'
     for(const side of [-1,1]) {
       const sidewall=mesh(new THREE.TorusGeometry(.303,.05,12,72),rubber,wheel,[0,0,side*.106]);sidewall.scale.z=.38
     }
-    cylinder(.252,.018,carbon,wheel,[0,0,sign*.12])
-    cylinder(.204,.014,darkMetal,wheel,[0,0,sign*.13])
-    const rim=mesh(new THREE.TorusGeometry(.272,.012,10,72),titanium,wheel,[0,0,sign*.137]);rim.scale.z=.6
-    for(let i=0;i<10;i++) {
-      const a=i/10*Math.PI*2,transform=([px,py])=>[Math.cos(a)*px-Math.sin(a)*py,Math.sin(a)*px+Math.cos(a)*py,sign*.148]
-      panel([[.045,-.012],[.14,-.034],[.268,-.016],[.268,.012],[.14,-.004],[.045,.016]].map(transform),titanium,wheel)
+    cylinder(.262,.016,discLight,wheel,[0,0,sign*.118])
+    cylinder(.205,.012,carbon,wheel,[0,0,sign*.128])
+    const rim=mesh(new THREE.TorusGeometry(.272,.011,10,72),spokeDark,wheel,[0,0,sign*.137]);rim.scale.z=.6
+    for(let i=0;i<6;i++) {
+      const a=i/6*Math.PI*2,transform=([px,py])=>[Math.cos(a)*px-Math.sin(a)*py,Math.sin(a)*px+Math.cos(a)*py,sign*.145]
+      panel([[.05,-.009],[.15,-.02],[.268,-.011],[.268,.009],[.15,.0],[.05,.011]].map(transform),spokeDark,wheel)
     }
-    cylinder(.048,.025,alloy,wheel,[0,0,sign*.158])
-    box([.07,.14,.045],darkMetal,wheel,[.15,0,sign*.134])
+    cylinder(.05,.022,spokeDark,wheel,[0,0,sign*.152])
+    cylinder(.016,.026,alloy,wheel,[0,0,sign*.156])
     for(let t=0;t<4;t++)mesh(new THREE.TorusGeometry(wheelRadius,.002,4,72),carbon,wheel,[0,0,-.08+t*.052])
   }
   const wireMaterials=[],wireObjects=[]
