@@ -1,6 +1,8 @@
 # pantalla interactiva
 
-`src/infotainment.js` contiene la interfaz y el ciclo de vida de las aplicaciones. es una sección html operativa, no un diálogo flotante. `cockpit-screen.js` la incorpora como un css3dobject hijo de la superficie del monitor; css3drenderer y webgl comparten cámara y transformaciones. youtube y los archivos locales se reproducen dentro de ese elemento real, no se capturan como imágenes.
+`src/infotainment.js` contiene la interfaz y el ciclo de vida de las aplicaciones. es una sección html operativa, no un diálogo flotante. `cockpit-screen.js` proyecta las cuatro esquinas de la superficie del monitor con la cámara de three.js. `screen-projection.js` calcula una homografía en píxeles que sitúa el html exactamente sobre ese cuadrilátero. youtube y los archivos locales se reproducen dentro de ese elemento real, no se capturan como imágenes.
+
+la proyección directa evita una cámara css3d anidada: durante la revisión visual se detectaron controles visibles y accesibles por teclado que no recibían clics nativos. las pruebas verifican las cuatro esquinas, incluyendo perspectiva y planos degenerados; la comprobación en navegador incluye clics en botones y dentro del iframe. `resizeobserver` conserva las dimensiones sin medir el layout en cada fotograma.
 
 la interacción se habilita al tocar el monitor o pulsar `e`. la cámara se acerca al panel físico, con un campo de visión adaptado al aspecto de ventana; escape devuelve la vista. la capa dom se oculta en tercera persona o si la cámara no mira la cara frontal del monitor, para evitar que atraviese visualmente la carrocería. no se intenta una composición de profundidad arbitraria entre html y webgl.
 
@@ -11,6 +13,8 @@ la interacción se habilita al tocar el monitor o pulsar `e`. la cámara se acer
 - `onVisualChange` redibuja la escena al cambiar el brillo, el volumen o la luz.
 - `onDoors` modifica los paneles del modelo; la conducción no continúa con puertas abiertas.
 - `car-preview.js` renderiza una miniatura de la geometría original en un render target, sin otro contexto webgl ni imágenes generadas.
+- mientras se enfoca el monitor, el canvas queda `inert`; al salir recupera la interacción y el foco. los atajos respetan campos editables, diálogos y modificadores del navegador.
+- los nodos del panel y el trazado del minimapa se reutilizan. los datos dom se actualizan solo cuando el monitor es visible; las texturas del tablero no se suben de nuevo si sus valores no cambiaron.
 
 para añadir una aplicación, agrega un botón `data-os-app`, su sección `os-panel-<id>` y su etiqueta en `drawTexture`. `switchApp` conserva el contenido de cada panel y pausa los medios que dejan de estar visibles. mantén las nuevas integraciones desconectadas hasta una acción del usuario.
 
@@ -19,6 +23,10 @@ para añadir una aplicación, agrega un botón `data-os-app`, su sección `os-pa
 github pages es alojamiento estático: no hay proxy, backend, credenciales ni proceso chrome. las búsquedas se envían a google en otra pestaña. las direcciones públicas https pueden abrirse en una vista interna con sandbox, sin navegación de la ventana superior. no se admiten protocolos ejecutables, credenciales en urls o direcciones de red local.
 
 el encabezado [x-frame-options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/X-Frame-Options) y las políticas csp de un sitio pueden impedir su incrustación. el navegador no permite que la página anfitriona inspeccione el contenido de un iframe de otro origen para confirmar si fue bloqueado; por eso hay una salida externa permanente y no se muestra un estado de «cargado» ficticio.
+
+## perfiles gráficos
+
+`h` abre los controles y la pestaña vehículo. automático, calidad y rendimiento se eligen dentro del monitor, sin hud adicional; la preferencia se guarda en `roadster-render-mode`. la escala mostrada corresponde a la densidad efectiva del canvas, no a una cifra de fps. los presupuestos y la adaptación se describen en [rendimiento](performance.md).
 
 ## multimedia
 
