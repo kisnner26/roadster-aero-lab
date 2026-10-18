@@ -53,3 +53,19 @@ test('visibility mutes the master without changing the sound preference',async()
   page.hidden=false;page.visibilitychange()
   assert.equal(targets.at(-1),.65)
 })
+
+test('steady telemetry does not enqueue duplicate audio automation',async()=>{
+  const {audio,pending,targets}=fixture(),enable=audio.setEnabled(true)
+  pending[0].resolve();await enable
+  audio.setDriving(true)
+  const idle={speed:0,throttle:0,slip:0},before=targets.length
+  for(let frame=0;frame<600;frame++)audio.update(idle)
+  assert.equal(targets.length,before)
+  audio.update({speed:20,throttle:.5,slip:.3})
+  assert.ok(targets.length>before)
+  const moving=targets.length
+  audio.update({speed:20,throttle:.5,slip:.3})
+  assert.equal(targets.length,moving)
+  audio.update(idle)
+  assert.ok(targets.length>moving)
+})

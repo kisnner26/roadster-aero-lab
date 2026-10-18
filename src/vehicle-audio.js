@@ -4,6 +4,11 @@ export function createVehicleAudio(onChange=()=>{},{createContext=()=>new AudioC
   let context,master,motor,wind,road,skid,jet,enabled=false,driving=false,compressor,level=.65
   let requested=false,revision=0
   const tones=[]
+  const targets=new WeakMap()
+  function target(param,value,time,constant){
+    if(targets.get(param)===value)return
+    param.setTargetAtTime(value,time,constant);targets.set(param,value)
+  }
   function noiseBuffer() {
     const buffer=context.createBuffer(1,context.sampleRate*2,context.sampleRate),data=buffer.getChannelData(0)
     let seed=7391,smoothed=0
@@ -51,14 +56,14 @@ export function createVehicleAudio(onChange=()=>{},{createContext=()=>new AudioC
     if(!context)return
     const time=context.currentTime,speed=Math.abs(state.speed),load=state.throttle||0
     const frequency=42+speed*6.4+load*38
-    tones.forEach(({oscillator,ratio})=>oscillator.frequency.setTargetAtTime(frequency*ratio,time,.12))
-    motor.gain.setTargetAtTime(driving?.025+load*.085+speed*.0007:.012,time,.15)
-    wind.filter.frequency.setTargetAtTime(260+speed*22,time,.18)
-    wind.gain.gain.setTargetAtTime(driving?Math.pow(Math.min(1,speed/112),1.7)*.33:0,time,.2)
-    jet.gain.gain.setTargetAtTime(driving?Math.min(1,(state.boost||0)+(state.lift||0)+(state.assist||0)*.4)*.25:0,time,.07)
-    road.filter.frequency.setTargetAtTime(state.offroad?1150:240+speed*9,time,.1)
-    road.gain.gain.setTargetAtTime(driving?clamp(speed/50,0,1)* (state.offroad?.33:.12):0,time,.12)
-    skid.gain.gain.setTargetAtTime(driving?clamp(state.slip||0,0,1)*.18:0,time,.07)
+    tones.forEach(({oscillator,ratio})=>target(oscillator.frequency,frequency*ratio,time,.12))
+    target(motor.gain,driving?.025+load*.085+speed*.0007:.012,time,.15)
+    target(wind.filter.frequency,260+speed*22,time,.18)
+    target(wind.gain.gain,driving?Math.pow(Math.min(1,speed/112),1.7)*.33:0,time,.2)
+    target(jet.gain.gain,driving?Math.min(1,(state.boost||0)+(state.lift||0)+(state.assist||0)*.4)*.25:0,time,.07)
+    target(road.filter.frequency,state.offroad?1150:240+speed*9,time,.1)
+    target(road.gain.gain,driving?clamp(speed/50,0,1)* (state.offroad?.33:.12):0,time,.12)
+    target(skid.gain.gain,driving?clamp(state.slip||0,0,1)*.18:0,time,.07)
   }
   function door() {
     if(!context||!enabled)return
