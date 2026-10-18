@@ -326,13 +326,14 @@ function init() {
     doorTween=gsap.to(control,{amount:control.amount>.5?0:1,duration:reducedMotion.matches?0:.85,ease:'power2.inOut',onUpdate:()=>{doorOverride=control.amount;renderAt(state.time)}})
   })
   addEventListener('keydown',event=>{
+    if(event.ctrlKey||event.metaKey||event.altKey||infotainment?.isOpen)return
     if(driving?.active)return
-    if($('#sources').open || /INPUT|BUTTON|A/.test(document.activeElement.tagName))return
+    if($('#sources').open || /INPUT|TEXTAREA|SELECT|BUTTON|A/.test(document.activeElement.tagName)||document.activeElement.isContentEditable)return
     if(event.code==='Space'){event.preventDefault();setPlaying(!playing)}
     if(event.key==='ArrowRight'){event.preventDefault();doorOverride=null;seek((activeChapter+1)%chapters.length*14+.1)}
     if(event.key==='ArrowLeft'){event.preventDefault();doorOverride=null;seek((activeChapter+chapters.length-1)%chapters.length*14+.1)}
   })
-  canvas.addEventListener('pointerdown',event=>{if(driving?.active)return;pointerDown=true;dragX=event.clientX;dragY=event.clientY;canvas.setPointerCapture(event.pointerId);$('#gesture-hint').style.opacity='0'})
+  canvas.addEventListener('pointerdown',event=>{if(driving?.active||event.button!==0)return;pointerDown=true;dragX=event.clientX;dragY=event.clientY;canvas.setPointerCapture(event.pointerId);$('#gesture-hint').style.opacity='0'})
   canvas.addEventListener('pointermove',event=>{
     if(driving?.active||!pointerDown)return
     userAzimuth-=(event.clientX-dragX)*.005
@@ -341,7 +342,7 @@ function init() {
     if(!playing)renderAt(state.time)
   })
   const endDrag=()=>{pointerDown=false}
-  canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',endDrag)
+  canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',endDrag);canvas.addEventListener('lostpointercapture',endDrag)
   let wheelStamp=0
   canvas.addEventListener('wheel',event=>{
     if(driving?.active)return
@@ -350,8 +351,9 @@ function init() {
     doorOverride=null;seek(((activeChapter+(event.deltaY>0?1:chapters.length-1))%chapters.length)*14+.1)
   },{passive:true})
   document.addEventListener('visibilitychange',()=>{cancelAnimationFrame(frame);lastStamp=0;if(playing&&!document.hidden)frame=requestAnimationFrame(tick)})
-  reducedMotion.addEventListener('change',()=>{if(reducedMotion.matches)setPlaying(false)})
+  reducedMotion.addEventListener('change',()=>{if(reducedMotion.matches)setPlaying(false);driving?.setReducedMotion(reducedMotion.matches)})
   let wasPlaying=false
+  $('#sources').setAttribute('aria-labelledby','sources-title');$('#sources h2').id='sources-title'
   $('#open-sources').addEventListener('click',()=>{wasPlaying=playing;setPlaying(false);$('#sources').showModal()})
   $('#close-sources').addEventListener('click',()=>$('#sources').close())
   $('#sources').addEventListener('click',event=>{if(event.target===$('#sources')){const r=$('#sources').getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)$('#sources').close()}})
@@ -362,8 +364,8 @@ function init() {
   const carPreview=createCarPreview(renderer,car,scene.environment)
   infotainment=createInfotainment({car,audio,cabinLight,carPreview,graphics,getTelemetry:()=>driving.active?driving.telemetry:null,
     onVisualChange:()=>{if(driving.active)driving.resize();else renderAt(state.time)},
-    onOpen:()=>{screenResume=playing;setPlaying(false);doorTween?.kill();$('#experience').dataset.screenFocused='true';if(driving.active){driving.pause(true);driving.focusScreen(true)}else{screenStudioFocus=true;doorOverride=0;userAzimuth=0;userElevation=0;seek(47)}},
-    onClose:()=>{$('#experience').dataset.screenFocused='false';if(driving.active)driving.focusScreen(false);else{screenStudioFocus=false;renderAt(state.time);setPlaying(screenResume)}},
+    onOpen:()=>{screenResume=playing;setPlaying(false);doorTween?.kill();canvas.inert=true;$('#experience').dataset.screenFocused='true';if(driving.active){driving.pause(true);driving.focusScreen(true)}else{screenStudioFocus=true;doorOverride=0;userAzimuth=0;userElevation=0;seek(47)}},
+    onClose:()=>{canvas.inert=false;$('#experience').dataset.screenFocused='false';if(driving.active)driving.focusScreen(false);else{screenStudioFocus=false;renderAt(state.time);setPlaying(screenResume)}},
     onReset:()=>{if(driving.active)driving.reset()},
     onDoors:()=>{
       if(!driving.active){$('#doors').click();return car.doors[0].pivot.rotation.z<.5}
@@ -374,8 +376,9 @@ function init() {
   cockpitScreen=createCockpitScreen(car,infotainment.element,$('#experience'))
   $('#open-screen').removeAttribute('aria-haspopup');$('#open-screen').setAttribute('aria-controls','infotainment')
   $('#open-screen').addEventListener('click',()=>infotainment.open())
-  addEventListener('keydown',event=>{if(event.code==='KeyE'&&!event.repeat&&!document.querySelector('dialog[open]')&&!/INPUT|TEXTAREA|SELECT/.test(event.target.tagName)){event.preventDefault();infotainment.open()}})
-  addEventListener('keydown',event=>{if(event.code==='KeyH'&&!infotainment.isOpen&&!/INPUT|TEXTAREA|SELECT/.test(event.target.tagName)){event.preventDefault();infotainment.showControls()}})
+  const shortcutAllowed=event=>!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.target.isContentEditable&&!document.querySelector('dialog[open]')&&!/INPUT|TEXTAREA|SELECT/.test(event.target.tagName)
+  addEventListener('keydown',event=>{if(event.code==='KeyE'&&!event.repeat&&shortcutAllowed(event)){event.preventDefault();infotainment.open()}})
+  addEventListener('keydown',event=>{if(event.code==='KeyH'&&!event.repeat&&!infotainment.isOpen&&shortcutAllowed(event)){event.preventDefault();infotainment.showControls()}})
   const screenRay=new THREE.Raycaster(),screenPointer=new THREE.Vector2()
   let screenPointerStart=null
   canvas.addEventListener('pointerdown',event=>screenPointerStart=[event.clientX,event.clientY])

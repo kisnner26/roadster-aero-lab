@@ -137,7 +137,7 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
     car.sections.visible=false;car.wireObjects.forEach(object=>object.visible=false)
     $('#experience').dataset.mode='drive';$('#drive-hud').hidden=false
     $('#drive-toggle').setAttribute('aria-pressed','true');$('#drive-toggle').setAttribute('aria-label','salir del modo de conducción');$('#drive-toggle').textContent='salir de pov'
-    $('#viewport').setAttribute('tabindex','0');$('#viewport').setAttribute('aria-describedby','drive-instructions');$('#viewport').focus()
+    $('#viewport').setAttribute('tabindex','0');$('#viewport').setAttribute('aria-describedby','drive-instructions');$('#viewport').focus({preventScroll:true})
     renderer.setClearColor(0xa4b5bd);renderer.toneMappingExposure=.95
     resize();reset();audio.setDriving(true)
     try{if(!hasDriven)await audio.setEnabled(true)}catch{$('#drive-message').textContent='pulsa sonido para activar el audio'}
@@ -155,7 +155,7 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
     renderer.setClearColor(0x080a0c);renderer.toneMappingExposure=1.15;onExit()
   }
   function keydown(event) {
-    if(!active||isScreenOpen()||/INPUT|TEXTAREA|SELECT/.test(event.target.tagName))return
+    if(!active||isScreenOpen()||document.querySelector('dialog[open]')||event.ctrlKey||event.metaKey||event.altKey||event.target.isContentEditable||/INPUT|TEXTAREA|SELECT/.test(event.target.tagName))return
     if(event.code==='Escape'){event.preventDefault();exit();return}
     if(event.repeat&&!heldKeys.has(event.code))return
     if(heldKeys.has(event.code)){
@@ -189,10 +189,11 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
     button.addEventListener('keydown',event=>{if(event.code==='Space'||event.code==='Enter'){event.preventDefault();touch[name]=1;button.classList.add('is-held')}})
     button.addEventListener('keyup',event=>{if(event.code==='Space'||event.code==='Enter')release()});button.addEventListener('blur',release)
   })
-  $('#viewport').addEventListener('pointerdown',event=>{if(!active)return;dragging=true;dragX=event.clientX;dragY=event.clientY;$('#viewport').setPointerCapture(event.pointerId)})
+  $('#viewport').addEventListener('pointerdown',event=>{if(!active||event.button!==0)return;dragging=true;dragX=event.clientX;dragY=event.clientY;$('#viewport').setPointerCapture(event.pointerId)})
   $('#viewport').addEventListener('pointermove',event=>{if(!active||!dragging)return;const limit=exterior?Math.PI:.85;headYaw=THREE.MathUtils.clamp(headYaw+(event.clientX-dragX)*.004,-limit,limit);headPitch=THREE.MathUtils.clamp(headPitch-(event.clientY-dragY)*.003,-.2,.25);dragX=event.clientX;dragY=event.clientY;if(paused)draw(0)})
   $('#viewport').addEventListener('pointerup',()=>dragging=false);$('#viewport').addEventListener('pointercancel',()=>dragging=false)
+  $('#viewport').addEventListener('lostpointercapture',()=>dragging=false)
   lastControls=$('#drive-instructions').textContent
   $('#viewport').addEventListener('focus',()=>{if(active)$('#drive-instructions').textContent=lastControls})
-  return {get active(){return active},get camera(){return camera},get screenVisible(){return !exterior||screenFocus},get telemetry(){return {...state,active,paused,notice,area}},focusScreen(value){if(value){previousExterior=exterior;screenFocus=true}else{screenFocus=false;exterior=previousExterior}viewReady=false;draw(0)},pause,reset,enter,exit,resize}
+  return {get active(){return active},get camera(){return camera},get screenVisible(){return !exterior||screenFocus},get telemetry(){return {...state,active,paused,notice,area}},setReducedMotion(value){reducedMotion=Boolean(value);if(active)draw(0)},focusScreen(value){if(value){previousExterior=exterior;screenFocus=true}else{screenFocus=false;exterior=previousExterior}viewReady=false;draw(0)},pause,reset,enter,exit,resize}
 }
