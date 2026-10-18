@@ -60,7 +60,7 @@ export function createDrivingWorld(scene,car) {
   }
   terrainGeometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));terrainGeometry.computeVertexNormals()
   const textures=new THREE.TextureLoader(),assetUrl=name=>`${import.meta.env.BASE_URL}assets/driving/${name}`
-  const grass=textures.load(assetUrl('grass.jpg'));grass.wrapS=grass.wrapT=THREE.RepeatWrapping;grass.repeat.set(200,200);grass.colorSpace=THREE.SRGBColorSpace;grass.anisotropy=4
+  const grass=textures.load(assetUrl('grass.webp'));grass.wrapS=grass.wrapT=THREE.RepeatWrapping;grass.repeat.set(200,200);grass.colorSpace=THREE.SRGBColorSpace;grass.anisotropy=4
   const terrain=new THREE.Mesh(terrainGeometry,new THREE.MeshStandardMaterial({map:grass,vertexColors:true,roughness:1}));terrain.receiveShadow=true;scene.add(terrain)
 
   function ribbon(offset,width,material,y=.02) {
@@ -74,8 +74,8 @@ export function createDrivingWorld(scene,car) {
   }
   ribbon(0,18,new THREE.MeshStandardMaterial({color:0x79796e,roughness:1}),-.015)
   const roadMaterial=new THREE.MeshStandardMaterial({map:asphaltTexture(),roughness:.94,color:0xb2b6b9})
-  textures.load(assetUrl('asphalt.jpg'),texture=>{texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(3,240);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=8;roadMaterial.map.dispose();roadMaterial.map=texture;roadMaterial.needsUpdate=true})
-  textures.load(assetUrl('asphalt-normal.jpg'),texture=>{texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(3,240);texture.anisotropy=8;roadMaterial.normalMap=texture;roadMaterial.normalScale.set(.18,.18);roadMaterial.needsUpdate=true})
+  textures.load(assetUrl('asphalt.webp'),texture=>{texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(3,240);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=8;roadMaterial.map.dispose();roadMaterial.map=texture;roadMaterial.needsUpdate=true})
+  textures.load(assetUrl('asphalt-normal.webp'),texture=>{texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(3,240);texture.anisotropy=8;roadMaterial.normalMap=texture;roadMaterial.normalScale.set(.18,.18);roadMaterial.needsUpdate=true})
   ribbon(0,14,roadMaterial)
   createStuntWorld(scene,roadMaterial,car,terrain.material,heightAt)
   const marking=new THREE.MeshBasicMaterial({color:0xd3d4c6})
