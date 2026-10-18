@@ -1,29 +1,46 @@
-<!doctype html><html lang="es"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Secuencia visual interactiva de planos públicos del Tesla Roadster y Falcon Heavy."><meta name="theme-color" content="#07100d">
-<link rel="canonical" href="https://kisnner26.github.io/roadster-aero-lab/"><link rel="icon" href="./favicon.svg" type="image/svg+xml">
-<meta property="og:title" content="Roadster / Falcon Heavy — Engineering Sequence"><meta property="og:description" content="Planos, cotas y flujo en una secuencia visual interactiva."><meta property="og:type" content="website"><meta property="og:url" content="https://kisnner26.github.io/roadster-aero-lab/"><meta property="og:image" content="https://kisnner26.github.io/roadster-aero-lab/assets/roadster-aero-lab.png">
-<title>Roadster / Falcon Heavy — Engineering Sequence</title></head><body>
-<main id="sequence" data-composition-id="roadster-engineering" data-width="1920" data-height="1080" data-duration="30" aria-label="secuencia visual de ingeniería">
-<div class="hud" aria-hidden="true"><span>tr0261 / fh-02</span><span id="hud-time">00:00.0</span><span>mm / m / pa</span></div>
-
-<section class="scene is-visible" id="scene-envelope" aria-label="cotas oficiales del tesla roadster 2.5"><div class="scene-inner blueprint-field">
-<svg class="technical-svg roadster-side" viewBox="0 0 1400 760" role="img" aria-label="vista lateral del roadster con cotas oficiales"><defs><pattern id="grid-a" width="70" height="70" patternUnits="userSpaceOnUse"><path d="M70 0H0V70"/></pattern><marker id="arrow-a" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4 0 8Z"/></marker></defs>
-<rect width="1400" height="760" fill="url(#grid-a)" class="grid-fill"/><g class="car-lines draw-group"><path d="M120 505C216 480 300 438 386 369C469 302 525 226 644 204C780 179 928 211 1025 274C1086 314 1122 381 1194 421C1250 451 1302 467 1332 489L1312 519H120Z"/><path d="M389 368C469 280 528 218 646 203C751 190 842 202 925 232L1003 337H477Z"/><path d="M477 338L431 455M1003 337L1060 448M659 204L669 336"/><circle cx="403" cy="494" r="93"/><circle cx="1110" cy="494" r="93"/><circle cx="403" cy="494" r="55"/><circle cx="1110" cy="494" r="55"/></g>
-<g class="dimensions dimension-group"><path d="M120 625V553M1332 625V553M120 603H1332" marker-start="url(#arrow-a)" marker-end="url(#arrow-a)"/><text x="726" y="588">3946 mm</text><path d="M403 702V585M1110 702V585M403 678H1110" marker-start="url(#arrow-a)" marker-end="url(#arrow-a)"/><text x="756" y="663">2351 mm</text><path d="M70 204H110M70 519H110M88 204V519" marker-start="url(#arrow-a)" marker-end="url(#arrow-a)"/><text x="65" y="365" transform="rotate(-90 65 365)">1127 mm</text><path d="M800 519v60M800 560h310"/><text x="951" y="548">130 mm</text></g><g class="registration"><path d="M34 34h70M69 0v70M1296 34h70M1331 0v70M34 726h70M69 691v69M1296 726h70M1331 691v69"/></g></svg>
-<div class="scene-code">01 / envelope</div><div class="scale-mark">roadster 2.5 · 1:10</div></div></section>
-
-<section class="scene" id="scene-orthographic" aria-label="proyecciones ortográficas del tesla roadster"><div class="scene-inner dark-field">
-<div class="ortho ortho-side"><svg viewBox="0 0 1200 470"><use href="#roadster-profile"/></svg><span>side · 3946</span></div>
-<div class="ortho ortho-top"><svg viewBox="0 0 900 340"><path d="M82 172C155 119 267 92 450 89C635 88 760 124 826 171C760 224 632 251 450 249C267 248 151 221 82 172Z"/><path d="M254 151C338 119 557 116 652 149L678 192C573 217 333 219 223 190Z"/><path d="M450 90v159M224 190l-53 15M678 192l55 14"/></svg><span>top · 1851</span></div>
-<div class="ortho ortho-front"><svg viewBox="0 0 440 340"><path d="M46 265C59 163 99 91 202 63C302 36 371 105 397 265Z"/><path d="M113 130C173 67 272 58 337 119L362 185H85Z"/><path d="M47 265h350M83 265l15-53M361 265l-15-53"/></svg><span>front · 1851</span></div><div class="crosshair"></div><div class="scene-code">02 / orthographic</div></div></section>
-
-<section class="scene" id="scene-airflow" aria-label="visualización aerodinámica cualitativa del roadster"><div class="scene-inner wind-field"><canvas id="flow-canvas" width="1920" height="1080" aria-hidden="true"></canvas><svg class="aero-car" viewBox="0 0 1200 470" role="img" aria-label="roadster atravesando un campo de flujo"><use href="#roadster-profile"/><g class="pressure-zones"><ellipse cx="104" cy="218" rx="74" ry="156"/><ellipse cx="611" cy="105" rx="220" ry="68"/><ellipse cx="1070" cy="222" rx="120" ry="194"/></g></svg><div class="pressure pressure-high"><b>p+</b></div><div class="pressure pressure-low"><b>p−</b></div><div class="velocity"><b>v∞</b><span>67 m/s</span></div><div class="scene-code">03 / flow field</div></div></section>
-
-<section class="scene" id="scene-scale" aria-label="comparación a escala entre tesla roadster y falcon heavy"><div class="scene-inner scale-field"><svg class="scale-comparison" viewBox="0 0 1700 920" role="img" aria-label="falcon heavy y roadster dibujados a la misma escala"><defs><marker id="arrow-b" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4 0 8Z"/></marker></defs><g class="falcon-heavy"><path class="core" d="M806 95L838 48L870 95V700H806Z"/><path class="core" d="M692 158L724 111L756 158V700H692Z"/><path class="core" d="M920 158L952 111L984 158V700H920Z"/><path d="M806 278h64M692 278h64M920 278h64M806 580h64M692 580h64M920 580h64"/><g class="engines"><path d="M690 700h68l-15 54h-38Z"/><path d="M804 700h68l-15 54h-38Z"/><path d="M918 700h68l-15 54h-38Z"/></g></g><g class="mini-roadster" transform="translate(1085 653) scale(.26)"><use href="#roadster-profile"/></g><g class="rocket-dim"><path d="M593 48H650M593 754H650M620 48V754" marker-start="url(#arrow-b)" marker-end="url(#arrow-b)"/><text x="600" y="405" transform="rotate(-90 600 405)">70.0 m</text></g><g class="rocket-dim"><path d="M692 828v-40M984 828v-40M692 811H984" marker-start="url(#arrow-b)" marker-end="url(#arrow-b)"/><text x="838" y="798">12.2 m</text></g><g class="rocket-dim car-dim"><path d="M1090 813v-52M1354 813v-52M1090 795H1354" marker-start="url(#arrow-b)" marker-end="url(#arrow-b)"/><text x="1222" y="781">3.946 m</text></g><path class="ground" d="M120 755H1580"/></svg><div class="ratio">17.74×</div><div class="scene-code">04 / common scale</div></div></section>
-
-<section class="scene" id="scene-orbit" aria-label="roadster como carga útil del primer vuelo de falcon heavy"><div class="scene-inner orbit-field"><canvas id="stars-canvas" width="1920" height="1080" aria-hidden="true"></canvas><div class="earth"></div><svg class="payload" viewBox="0 0 1200 540" role="img" aria-label="tesla roadster en configuración orbital"><use href="#roadster-profile"/><path class="adapter" d="M410 421h390l-54 86H465Z"/></svg><svg class="orbit-line" viewBox="0 0 1920 1080" aria-hidden="true"><path d="M-100 810C380 180 1420 90 2010 610"/></svg><div class="mission-data"><span>fh-001</span><b>06.02.2018</b><span>heliocentric</span></div><div class="scene-code">05 / payload</div></div></section>
-
-<svg class="svg-defs" aria-hidden="true"><symbol id="roadster-profile" viewBox="0 0 1200 470"><path class="vehicle-body" d="M67 350C150 329 230 296 310 239C374 193 419 126 507 108C609 87 724 105 808 151C858 179 894 229 949 262C1005 296 1070 310 1135 337L1115 367H68Z"/><path class="vehicle-glass" d="M316 236C379 167 425 120 510 109C592 98 662 105 730 129L794 210H382Z"/><path class="vehicle-detail" d="M382 212L348 307M794 210L840 304M522 109L529 210"/><circle class="vehicle-wheel" cx="327" cy="350" r="78"/><circle class="vehicle-wheel" cx="912" cy="350" r="78"/><circle class="vehicle-rim" cx="327" cy="350" r="43"/><circle class="vehicle-rim" cx="912" cy="350" r="43"/></symbol></svg>
-<nav class="transport" aria-label="controles de secuencia"><button id="previous" type="button" aria-label="escena anterior">←</button><button id="play-toggle" type="button" aria-label="pausar secuencia" aria-pressed="false">Ⅱ</button><button id="next" type="button" aria-label="escena siguiente">→</button></nav><div class="timeline" aria-hidden="true"><div id="progress"></div></div><div class="scene-dots" role="tablist" aria-label="escenas"></div><a class="source-link" href="https://github.com/kisnner26/roadster-aero-lab" aria-label="ver fuentes y código en github">src ↗</a>
-</main><script type="module" src="/src/main.js"></script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080a0c">
+  <meta name="description" content="Un estudio interactivo de forma, flujo y vuelo. Tesla Roadster y Falcon Heavy en una experiencia tridimensional.">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://kisnner26.github.io/roadster-aero-lab/">
+  <meta property="og:title" content="roadster — form / flow / flight">
+  <meta property="og:description" content="Un estudio interactivo de forma, flujo y vuelo.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://kisnner26.github.io/roadster-aero-lab/">
+  <meta property="og:image" content="https://kisnner26.github.io/roadster-aero-lab/assets/roadster-studio.jpg">
+  <title>roadster — form / flow / flight</title>
+</head>
+<body>
+  <main id="experience" data-composition-id="roadster-engineering" data-width="1920" data-height="1080" data-duration="56" aria-label="estudio tridimensional del tesla roadster">
+    <canvas id="viewport" aria-label="modelo tridimensional interactivo del tesla roadster y falcon heavy"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="frame-corner top-left" aria-hidden="true"></div><div class="frame-corner bottom-right" aria-hidden="true"></div>
+    <header class="masthead">
+      <a class="wordmark" href="#" aria-label="volver a la escena inicial">roadster<span class="wordmark-rule"></span><span class="wordmark-small">aero lab</span></a>
+      <span class="edition">independent engineering study / 026</span>
+      <button class="source-button" id="open-sources" aria-label="abrir fuentes y datos del estudio">datos <span>↗</span></button>
+    </header>
+    <div class="chapter-context"><span class="status-light"></span><span id="chapter-kicker">01 / surface study</span><span class="context-rule"></span><span id="view-mode">perspective</span></div>
+    <div class="title-block" aria-hidden="true"><span class="eyebrow" id="eyebrow">tesla roadster / first generation</span><h1 id="chapter-title">form.</h1><div class="title-subline"><span id="chapter-subtitle">every line has a purpose.</span><span class="short-rule"></span></div></div>
+    <svg id="annotations" aria-hidden="true"><defs><marker id="dim-arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto-start-reverse"><path d="M6 0L0 3 6 6" fill="none" stroke="currentColor" stroke-width="1"/></marker></defs><g id="dimension-lines"></g></svg>
+    <div class="coordinate-label" aria-hidden="true"><svg viewBox="0 0 70 70"><path d="M20 50V9M20 50H63M20 50L44 29"/><text x="15" y="8">y</text><text x="64" y="54">x</text><text x="47" y="27">z</text></svg><span id="coordinate-mode">world / meters</span></div>
+    <aside class="telemetry" aria-label="datos de la escena"><span class="panel-label" id="data-title">vehicle envelope</span><div class="metric"><span id="metric-a-label">length</span><strong id="metric-a">3,946 <small>mm</small></strong></div><div class="metric"><span id="metric-b-label">wheelbase</span><strong id="metric-b">2,351 <small>mm</small></strong></div><div class="metric"><span id="metric-c-label">height</span><strong id="metric-c">1,127 <small>mm</small></strong></div><div class="telemetry-foot"><span class="status-light"></span><span id="data-foot">public dimensional reference</span></div></aside>
+    <div class="gesture-hint" id="gesture-hint"><span>↔</span> arrastra para explorar</div>
+    <footer class="control-deck">
+      <div class="playback"><button id="play" class="icon-button" aria-label="pausar recorrido" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path id="play-icon" d="M7 5v10M13 5v10"/></svg></button><span id="timecode">00:00</span><span class="time-divider">/</span><span>00:56</span></div>
+      <nav class="chapters" aria-label="capítulos"><button data-chapter="0" aria-current="step"><span>01</span> form</button><button data-chapter="1"><span>02</span> structure</button><button data-chapter="2"><span>03</span> flow</button><button data-chapter="3"><span>04</span> flight</button></nav>
+      <button id="sound" class="icon-button" aria-label="activar sonido ambiental" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10h4l5-4v12l-5-4H4zM17 9l5 6M22 9l-5 6" id="sound-icon"/></svg></button>
+      <div class="scrubber"><label class="sr-only" for="timeline">posición del recorrido</label><input id="timeline" type="range" min="0" max="56" step="0.01" value="0"><div class="scrubber-fill" id="scrubber-fill"></div><i></i><i></i><i></i></div>
+    </footer>
+    <div class="loader" id="loader" role="status"><span>roadster</span><div class="loader-line"></div><small>initializing study</small></div>
+    <p class="fallback" id="fallback" hidden>tu navegador no pudo iniciar la escena 3d. activa la aceleración gráfica y vuelve a cargar.</p>
+    <p class="sr-only" id="scene-announcement" aria-live="polite"></p>
+  </main>
+  <dialog id="sources"><div class="dialog-heading"><span>study documentation / 026</span><button id="close-sources" class="icon-button" aria-label="cerrar datos">×</button></div><h2>la forma, documentada.</h2><p>reconstrucción visual independiente del roadster de primera generación. las cotas provienen de documentación pública; la geometría es interpretativa y no constituye un modelo cad de fabricación.</p><dl><div><dt>longitud</dt><dd>3,946 mm</dd></div><div><dt>distancia entre ejes</dt><dd>2,351 mm</dd></div><div><dt>altura</dt><dd>1,127 mm</dd></div><div><dt>ancho con espejos</dt><dd>1,851 mm</dd></div><div><dt>falcon heavy / altura</dt><dd>70 m</dd></div></dl><p>el flujo es una visualización cualitativa, no un cálculo cfd. el roadster lanzado en 2018 corresponde a la primera generación; la misión se representa de manera artística.</p><div class="source-links"><a href="https://service.tesla.com/docs/Public/Roadster/Owner/Roadster_2.5_Owners_Manual.pdf" target="_blank" rel="noopener noreferrer">tesla / manual roadster 2.5 ↗</a><a href="https://www.spacex.com/vehicles/falcon-heavy/" target="_blank" rel="noopener noreferrer">spacex / falcon heavy ↗</a><a href="https://github.com/kisnner26/roadster-aero-lab" target="_blank" rel="noopener noreferrer">código y documentación ↗</a></div></dialog>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
