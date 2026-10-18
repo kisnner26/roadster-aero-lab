@@ -82,8 +82,8 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
     if(screenFocus){desiredCamera.set(.24,.80,0);desiredTarget.set(-.349,.795,0)}
     else if(exterior){
       // Chase follows heading, not the body's airborne roll, so jumps remain readable.
-      const f=new THREE.Vector3(Math.cos(state.heading),0,Math.sin(state.heading)),orbit=state.heading+headYaw
-      desiredCamera.set(state.x-Math.cos(orbit)*8,state.y+3.1+headPitch*7,state.z-Math.sin(orbit)*8);desiredTarget.set(state.x+f.x*5*(1-Math.min(1,Math.abs(headYaw))),state.y+.6,state.z+f.z*5*(1-Math.min(1,Math.abs(headYaw))))
+      const fx=Math.cos(state.heading),fz=Math.sin(state.heading),orbit=state.heading+headYaw
+      desiredCamera.set(state.x-Math.cos(orbit)*8,state.y+3.1+headPitch*7,state.z-Math.sin(orbit)*8);desiredTarget.set(state.x+fx*5*(1-Math.min(1,Math.abs(headYaw))),state.y+.6,state.z+fz*5*(1-Math.min(1,Math.abs(headYaw))))
       if(state.loopAngle!==undefined&&state.loopAngle!==null){desiredCamera.set(stuntLoop.x-28,20,stuntLoop.z+44);desiredTarget.set(state.x,state.y+.6,state.z)}
     }
     else {
@@ -97,7 +97,8 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
     camera.up.set(0,1,0)
     if(!exterior||screenFocus)camera.up.applyQuaternion(car.root.quaternion)
     camera.position.copy(cameraPosition);camera.lookAt(lookAt)
-    camera.fov=screenFocus?screenFocusFov(camera.aspect):(exterior?62:mobile?87:75)+(reducedMotion?0:Math.min(7,Math.abs(state.speed)*.07));camera.updateProjectionMatrix()
+    const fov=screenFocus?screenFocusFov(camera.aspect):(exterior?62:mobile?87:75)+(reducedMotion?0:Math.min(7,Math.abs(state.speed)*.07))
+    if(Math.abs(camera.fov-fov)>.01){camera.fov=fov;camera.updateProjectionMatrix()}
     viewReady=true
     $('#drive-speed').textContent=String(Math.round(Math.abs(state.speed)*3.6))
     $('#drive-gear-indicator').textContent=state.gear===1?'d':'r'

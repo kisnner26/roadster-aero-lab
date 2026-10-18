@@ -156,6 +156,7 @@ function init() {
     annotationNodes.push({ group, path: group.querySelector('path'), line: group.querySelector('line'), text: group.querySelector('text') })
   }
   const position = new THREE.Vector3(), target = new THREE.Vector3(), projection = new THREE.Vector3()
+  const nextPosition=new THREE.Vector3(),nextTarget=new THREE.Vector3(),offset=new THREE.Vector3(),spherical=new THREE.Spherical()
   const smooth = (a, b, t) => THREE.MathUtils.smoothstep(t, a, b)
 
   function resize() {
@@ -216,8 +217,8 @@ function init() {
     let k=0
     while(k<cameraFrames.length-2 && t>cameraFrames[k+1][0])k++
     const a=cameraFrames[k],b=cameraFrames[k+1],blend=smooth(a[0],b[0],t)
-    position.fromArray(a[1]).lerp(new THREE.Vector3(...b[1]),blend)
-    target.fromArray(a[2]).lerp(new THREE.Vector3(...b[2]),blend)
+    position.fromArray(a[1]).lerp(nextPosition.fromArray(b[1]),blend)
+    target.fromArray(a[2]).lerp(nextTarget.fromArray(b[2]),blend)
     const interior=smooth(42,45,t)*(1-smooth(52,55,t))
     car.wheels.visible=interior<.95
     camera.fov=THREE.MathUtils.lerp(35,73,interior)
@@ -228,11 +229,11 @@ function init() {
       position.sub(target).multiplyScalar(THREE.MathUtils.lerp(width>1000?.91:1.22,1,interior)).add(target)
       camera.setViewOffset(width,height,width*.015*(1-interior),-height*.025*(1-interior),width,height)
     }
-    const offset=position.clone().sub(target)
-    const spherical=new THREE.Spherical().setFromVector3(offset)
+    offset.copy(position).sub(target)
+    spherical.setFromVector3(offset)
     spherical.theta+=userAzimuth
     spherical.phi=THREE.MathUtils.clamp(spherical.phi+userElevation,.15,Math.PI/2-.03)
-    camera.position.copy(target).add(new THREE.Vector3().setFromSpherical(spherical))
+    camera.position.copy(target).add(offset.setFromSpherical(spherical))
     camera.lookAt(target)
     if(screenStudioFocus){camera.position.set(.24,.80,0);camera.lookAt(-.349,.795,0);camera.fov=screenFocusFov(camera.aspect);camera.clearViewOffset()}
     camera.updateMatrixWorld()
