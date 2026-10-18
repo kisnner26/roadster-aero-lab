@@ -5,7 +5,7 @@ const paint=new THREE.MeshPhysicalMaterial({color:0xc4c8cb,metalness:.58,roughne
 const carbon=new THREE.MeshStandardMaterial({color:0x080b0f,metalness:.3,roughness:.38,side:THREE.DoubleSide})
 const rubber=new THREE.MeshStandardMaterial({color:0x0e1013,roughness:.9})
 const alloy=new THREE.MeshStandardMaterial({color:0xd7dadd,metalness:.68,roughness:.26,envMapIntensity:1.1})
-const glass=new THREE.MeshPhysicalMaterial({color:0x0b1420,metalness:.55,roughness:.1,clearcoat:1,side:THREE.FrontSide,transparent:true,opacity:.87})
+const glass=new THREE.MeshPhysicalMaterial({color:0x080f17,metalness:.32,roughness:.13,clearcoat:.8,side:THREE.FrontSide,transparent:true,opacity:.96})
 const upholstery=new THREE.MeshStandardMaterial({color:0xcbd1d5,roughness:.75,side:THREE.DoubleSide})
 const led=new THREE.MeshBasicMaterial({color:0xd2ebff})
 const redLed=new THREE.MeshBasicMaterial({color:0xff161b})
@@ -33,6 +33,17 @@ function cylinder(radius,length,material,parent,position) {
   object.rotation.x=Math.PI/2
   return object
 }
+function canopy(parent) {
+  const curve=new THREE.CatmullRomCurve3([[-.94,.735,.68],[-.33,1.155,.6],[.06,1.18,.58],[.56,1.175,.56],[1.49,.8,.68]].map(p=>v(...p)),false,'catmullrom',.15)
+  const positions=[],indices=[],cols=24,rows=90
+  for(let i=0;i<=rows;i++){
+    const p=curve.getPoint(i/rows)
+    for(let j=0;j<=cols;j++){const u=j/cols*2-1;positions.push(p.x-.015*(1-u*u),p.y-.035*u*u,p.z*u)}
+  }
+  for(let i=0;i<rows;i++)for(let j=0;j<cols;j++){const a=i*(cols+1)+j,b=a+cols+1;indices.push(a,a+1,b,b,a+1,b+1)}
+  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setIndex(indices);geometry.computeVertexNormals()
+  mesh(geometry,glass,parent)
+}
 
 // proportions reconstructed from the supplied renders, not tesla manufacturing geometry.
 export const referenceEnvelope={length:4.5,width:1.98,height:1.18,wheelbase:2.70}
@@ -42,9 +53,9 @@ export function createRoadster() {
   root.add(shell,details,wheels)
   const wheelX=[-1.34,1.36],wheelRadius=.355
   const profiles=[
-    [-2.25,.84,.51],[-2.12,.94,.55],[-1.7,.97,.65],[-1.34,.99,.71],
-    [-.86,.95,.72],[-.25,.92,.71],[.45,.94,.73],[1.01,.99,.77],
-    [1.36,1.01,.79],[1.9,.98,.77],[2.25,.91,.74],
+    [-2.25,.81,.51],[-2.12,.91,.55],[-1.7,.96,.65],[-1.34,.985,.71],
+    [-.86,.94,.72],[-.25,.90,.71],[.45,.92,.73],[1.01,.98,.77],
+    [1.36,1.0,.79],[1.9,.94,.77],[2.25,.86,.74],
   ]
   const longitudinal=new THREE.CatmullRomCurve3(profiles.map(p=>v(...p)),false,'catmullrom',.2)
   const loops=[]
@@ -88,14 +99,12 @@ export function createRoadster() {
     }
   }
   // the cabin is an enclosed dark canopy with a continuous roof/rear-glass silhouette.
-  panel([[-.87,.725,-.65],[-.87,.725,.65],[-.26,1.17,.58],[-.26,1.17,-.58]],glass,details)
-  panel([[-.26,1.17,-.58],[-.26,1.17,.58],[.58,1.18,.56],[.58,1.18,-.56]],glass,details)
-  panel([[-.25,1.154,-.55],[-.25,1.154,.55],[.58,1.165,.54],[.58,1.165,-.54]],headliner,details)
-  panel([[.58,1.18,-.56],[.58,1.18,.56],[1.49,.79,.68],[1.49,.79,-.68]],glass,details)
+  canopy(details)
+  panel([[-.25,1.13,-.55],[-.25,1.13,.55],[.58,1.14,.54],[.58,1.14,-.54]],headliner,details)
   for(const sign of [-1,1]) {
-    line([[-.87,.725,sign*.65],[-.26,1.17,sign*.58],[.58,1.18,sign*.56],[1.49,.79,sign*.68]],.012,paint,shell)
-    panel([[.83,.75,sign*.91],[1.52,.78,sign*.83],[.58,1.18,sign*.56]],paint,shell)
-    line([[.65,1.157,sign*.59],[1.52,.79,sign*.7]],.006,carbon,details)
+    line([[-.94,.7,sign*.68],[-.33,1.12,sign*.6],[.06,1.145,sign*.58],[.56,1.14,sign*.56],[1.49,.765,sign*.68]],.012,paint,shell)
+    panel([[.83,.75,sign*.91],[1.52,.78,sign*.83],[.58,1.14,sign*.56]],paint,shell)
+    line([[.65,1.13,sign*.59],[1.52,.79,sign*.7]],.006,carbon,details)
   }
   line([[-.86,.73,-.65],[-.91,.75,0],[-.86,.73,.65]],.012,carbon,details)
   // doors pivot at the leading edge; glazing, inner trim and outer skin move as one assembly.
@@ -156,8 +165,9 @@ export function createRoadster() {
   const screenTexture=createScreenTexture()
   const screenSurface=mesh(new THREE.PlaneGeometry(.365,.205),new THREE.MeshBasicMaterial({map:screenTexture}),details,[-.349,.795,0]);screenSurface.rotation.y=Math.PI/2
   const yokePoints=[[-.44,.84,.18],[-.44,.87,.2],[-.44,.87,.46],[-.44,.84,.49],[-.44,.72,.49],[-.44,.70,.46],[-.44,.70,.2],[-.44,.72,.18],[-.44,.84,.18]]
-  line(yokePoints,.017,upholstery,details)
-  box([.036,.105,.15],carbon,details,[-.435,.785,.335])
+  const steering=new THREE.Group();steering.position.set(-.44,.785,.335);details.add(steering)
+  line(yokePoints.map(([x,y,z])=>[x+.44,y-.785,z-.335]),.017,upholstery,steering)
+  box([.036,.105,.15],carbon,steering,[.005,0,0])
   for(const sign of [-1,1]) {
     const seat=new THREE.Group();seat.position.set(.25,.39,sign*.39);details.add(seat)
     const base=mesh(new THREE.CapsuleGeometry(.18,.22,8,20),upholstery,seat,[-.02,.06,0]);base.rotation.z=Math.PI/2;base.scale.set(1,.65,1)
@@ -202,7 +212,7 @@ export function createRoadster() {
   const sections=new THREE.Group();root.add(sections)
   const sectionMaterial=new THREE.LineBasicMaterial({color:0x85b9d2,transparent:true,opacity:0})
   for(let i=6;i<loops.length;i+=14)sections.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(loops[i].map(p=>v(...p))),sectionMaterial))
-  return {root,shell,details,wheels,wireMaterials,sectionMaterial,paint,glass,wheelCenters,doors,wing,plumeMaterial}
+  return {root,shell,details,wheels,wireMaterials,sectionMaterial,paint,glass,wheelCenters,doors,wing,plumeMaterial,steering,screenTexture}
 }
 
 function createScreenTexture() {
