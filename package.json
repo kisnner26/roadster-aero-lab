@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "eslint .",
+    "check:build": "node scripts/check-build.mjs",
     "test": "node --test",
     "benchmark:track": "node scripts/benchmark-track.mjs"
   },
