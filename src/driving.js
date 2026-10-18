@@ -72,9 +72,9 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
     car.root.position.set(state.x,state.y+(state.grounded?bump:0),state.z)
     car.root.rotation.set(reducedMotion?0:-state.lateral*.003,Math.PI-state.heading,reducedMotion?0:-state.acceleration*.0015)
     car.root.rotateZ(-state.pitch);car.root.rotateX(state.roll)
-    car.plumeMaterial.uniforms.uOpacity.value=state.boost*.48
+    car.plumeMaterial.uniforms.uTime.value=performance.now()/1000;car.plumeMaterial.uniforms.uOpacity.value=state.boost*.48
     car.exhaust.visible=Boolean(state.boost||state.lift)
-    if(car.liftPlumeMaterial)car.liftPlumeMaterial.uniforms.uOpacity.value=state.lift*.4
+    if(car.liftPlumeMaterial){car.liftPlumeMaterial.uniforms.uTime.value=performance.now()/1000;car.liftPlumeMaterial.uniforms.uOpacity.value=state.lift*.4}
     car.wheels.visible=true
     if(car.seats){car.seats[0].visible=state.augment!=='rocket';car.seats[1].visible=true}
     car.wheelCenters.forEach(wheel=>{wheel.rotation.y=wheel.position.x<0?-state.steer:0;wheel.rotation.z=state.distance/vehicleConfig.wheelRadius})

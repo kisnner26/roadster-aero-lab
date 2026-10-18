@@ -134,9 +134,11 @@ export function createRoadster({createCanvas=()=>document.createElement('canvas'
   box([.03,.014,.19],darkMetal,details,[2.305,.53,0])
   box([.19,.34,1.54],carbon,details,[2.23,.275,0])
   const exhaust=new THREE.Group();exhaust.visible=false;root.add(exhaust)
-  const plumeMaterial=new THREE.ShaderMaterial({uniforms:{uOpacity:{value:0}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+  // Jet: narrow throat that swells and tapers, hot white-blue core, turbulent fringe and shock diamonds.
+  const plumeMaterial=new THREE.ShaderMaterial({uniforms:{uOpacity:{value:0},uTime:{value:0}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,
     vertexShader:'varying vec2 vUv;varying float vFacing;void main(){vUv=uv;vFacing=abs(normalize(normalMatrix*normal).z);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-    fragmentShader:'uniform float uOpacity;varying vec2 vUv;varying float vFacing;void main(){float a=pow(clamp(vFacing,0.,1.),1.8)*pow(clamp(vUv.y,0.,1.),1.5);gl_FragColor=vec4(.72,.84,1.,a*uOpacity);}'})
+    fragmentShader:'uniform float uOpacity;uniform float uTime;varying vec2 vUv;varying float vFacing;void main(){float t=clamp(vUv.y,0.,1.);float turbulence=.5+.5*sin(vUv.x*62.8+t*22.-uTime*38.)*sin(vUv.x*37.7-t*13.+uTime*27.);float diamonds=pow(.5+.5*sin(t*46.-uTime*9.),4.)*exp(-t*2.6);float body=pow(clamp(vFacing,0.,1.),1.15)*pow(1.-t,1.5)*smoothstep(0.,.03,t)*(.5+.5*turbulence);float core=exp(-t*6.5)*pow(clamp(vFacing,0.,1.),2.);vec3 hot=vec3(.92,.96,1.);vec3 cool=vec3(.3,.5,1.);vec3 fringe=vec3(1.,.55,.28);vec3 col=mix(cool,hot,core);col=mix(col,fringe,smoothstep(.45,1.,t)*.55);col+=vec3(.75,.85,1.)*diamonds*.55;gl_FragColor=vec4(col,(body+core*.9+diamonds*.5*body)*uOpacity);}'})
+  const plumeGeometry=length=>new THREE.LatheGeometry(Array.from({length:24},(_,k)=>{const y=k/23;return new THREE.Vector2(.05+.045*Math.pow(y,.55)-.04*Math.pow(y,3),y*length)}),28)
   for(const z of [-.6,-.2,.2,.6]) {
     const rim=mesh(new THREE.TorusGeometry(.068,.008,10,40),alloy,details,[2.36,.455,z]);rim.rotation.y=Math.PI/2
     const inner=mesh(new THREE.CylinderGeometry(.059,.05,.13,32,1,true),darkMetal,details,[2.32,.455,z]);inner.rotation.z=Math.PI/2
@@ -146,13 +148,13 @@ export function createRoadster({createCanvas=()=>document.createElement('canvas'
       const a=blade/7*Math.PI*2
       const bladeMesh=box([.015,.028,.079],darkMetal,details,[2.34,.24+Math.sin(a)*.052,z+Math.cos(a)*.052]);bladeMesh.rotation.x=-a+.4
     }
-    const plume=mesh(new THREE.ConeGeometry(.09,.9,24,1,true),plumeMaterial,exhaust,[2.83,.455,z]);plume.rotation.z=Math.PI/2
+    const plume=mesh(plumeGeometry(1.7),plumeMaterial,exhaust,[2.3,.455,z]);plume.rotation.z=-Math.PI/2;plume.castShadow=false
   }
   for(const z of [-.8,-.4,0,.4,.8])box([.32,.27,.014],carbon,details,[2.24,.21,z])
   const liftPlumeMaterial=plumeMaterial.clone();liftPlumeMaterial.uniforms.uOpacity.value=0
   for(const x of [-1.1,1.1])for(const z of [-.73,.73]){
     const nozzle=mesh(new THREE.TorusGeometry(.045,.006,8,24),darkMetal,details,[x,.22,z]);nozzle.rotation.x=Math.PI/2
-    mesh(new THREE.ConeGeometry(.11,.9,20,1,true),liftPlumeMaterial,exhaust,[x,-.2,z])
+    {const plume=mesh(plumeGeometry(1.2),liftPlumeMaterial,exhaust,[x,.2,z]);plume.rotation.z=Math.PI;plume.castShadow=false}
   }
   for(const sign of [-1,1]){const nozzle=mesh(new THREE.TorusGeometry(.035,.005,8,24),darkMetal,details,[.9,.52,sign*.957]);if(sign<0)nozzle.rotation.y=Math.PI}
   // active aero: a high, narrow wing with vertical endplates.

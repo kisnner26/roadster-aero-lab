@@ -251,7 +251,7 @@ function init() {
     car.root.rotation.set(flight*.06,flight*-.28,flight*-.1)
     car.root.updateMatrixWorld(true)
     solidMaterials.forEach((opacity,material)=>{ material.opacity=opacity*(1-wireAmount*.88);material.transparent=material.opacity<.999 })
-    car.plumeMaterial.uniforms.uOpacity.value=flight*.22
+    car.plumeMaterial.uniforms.uTime.value=t;car.plumeMaterial.uniforms.uOpacity.value=flight*.9
     car.exhaust.visible=flight>.001
     car.sections.visible=wireAmount>.001
     car.wireObjects.forEach(object=>object.visible=wireAmount>.001)
@@ -367,12 +367,12 @@ function init() {
   $('#sources').addEventListener('close',()=>{if(wasPlaying)setPlaying(true)})
   $('#sound').addEventListener('click',()=>audio.toggle().catch(()=>$('#sound').setAttribute('aria-label','reintentar activar sonido ambiental')))
   driving=createDrivingMode({renderer,studio:scene,car,audio,reducedMotion:reducedMotion.matches,onFrame:stamp=>graphics.frame(stamp),onDashboard:()=>infotainment?.drawTexture(),onSceneRender:(scene,camera)=>{graphics.capture();cockpitScreen?.render(scene,camera,{interactive:Boolean(infotainment?.isOpen),allowed:driving.screenVisible})},isScreenOpen:()=>Boolean(infotainment?.isOpen),onExit:()=>{renderer.shadowMap.needsUpdate=true;renderAt(state.time);setPlaying(resumeStudio)}})
-  let screenResume=false
+  let screenResume=false,drivingWasPaused=false
   const carPreview=createCarPreview(renderer,car,scene.environment)
   infotainment=createInfotainment({car,audio,cabinLight,carPreview,graphics,getTelemetry:()=>driving.active?driving.telemetry:null,
     onVisualChange:()=>{if(driving.active)driving.resize();else renderAt(state.time)},
-    onOpen:()=>{screenResume=playing;setPlaying(false);doorTween?.kill();canvas.inert=true;$('#experience').dataset.screenFocused='true';if(driving.active){driving.pause(true);driving.focusScreen(true)}else{screenStudioFocus=true;doorOverride=0;userAzimuth=0;userElevation=0;seek(47)}},
-    onClose:()=>{canvas.inert=false;$('#experience').dataset.screenFocused='false';if(driving.active)driving.focusScreen(false);else{screenStudioFocus=false;renderAt(state.time);setPlaying(screenResume)}},
+    onOpen:()=>{screenResume=playing;drivingWasPaused=driving.active&&driving.telemetry.paused;setPlaying(false);doorTween?.kill();canvas.inert=true;$('#experience').dataset.screenFocused='true';if(driving.active){driving.pause(true);driving.focusScreen(true)}else{screenStudioFocus=true;doorOverride=0;userAzimuth=0;userElevation=0;seek(47)}},
+    onClose:()=>{canvas.inert=false;$('#experience').dataset.screenFocused='false';if(driving.active){driving.focusScreen(false);if(!drivingWasPaused)driving.pause(false)}else{screenStudioFocus=false;renderAt(state.time);setPlaying(screenResume)}},
     onReset:()=>{if(driving.active)driving.reset()},
     onDoors:()=>{
       if(!driving.active){$('#doors').click();return car.doors[0].pivot.rotation.z<.5}
