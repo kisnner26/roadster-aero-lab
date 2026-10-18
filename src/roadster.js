@@ -212,7 +212,7 @@ export function createRoadster() {
   const sections=new THREE.Group();root.add(sections)
   const sectionMaterial=new THREE.LineBasicMaterial({color:0x85b9d2,transparent:true,opacity:0})
   for(let i=6;i<loops.length;i+=14)sections.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(loops[i].map(p=>v(...p))),sectionMaterial))
-  return {root,shell,details,wheels,wireMaterials,sectionMaterial,paint,glass,wheelCenters,doors,wing,plumeMaterial,steering,screenTexture}
+  return {root,shell,details,wheels,wireMaterials,sectionMaterial,paint,glass,wheelCenters,doors,wing,plumeMaterial,steering,screenTexture,screenSurface}
 }
 
 function createScreenTexture() {
