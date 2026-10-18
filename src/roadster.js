@@ -6,7 +6,6 @@ const carbon=new THREE.MeshStandardMaterial({color:0x080b0f,metalness:.3,roughne
 const rubber=new THREE.MeshStandardMaterial({color:0x0e1013,roughness:.9})
 const alloy=new THREE.MeshStandardMaterial({color:0xd7dadd,metalness:.68,roughness:.26,envMapIntensity:1.1})
 const glass=new THREE.MeshPhysicalMaterial({color:0x3a2a14,metalness:.55,roughness:.06,clearcoat:1,envMapIntensity:1.5,side:THREE.FrontSide,transparent:true,opacity:.9,depthWrite:false})
-const titanium=new THREE.MeshStandardMaterial({color:0x6a7077,metalness:.75,roughness:.3,side:THREE.DoubleSide})
 const spokeDark=new THREE.MeshStandardMaterial({color:0x15181c,metalness:.7,roughness:.32,side:THREE.DoubleSide})
 const discLight=new THREE.MeshStandardMaterial({color:0xc9ccd0,metalness:.6,roughness:.34})
 const upholstery=new THREE.MeshStandardMaterial({color:0xcbd1d5,roughness:.75,side:THREE.DoubleSide})
