@@ -5,7 +5,7 @@ const clamp=(value,min,max)=>Math.max(min,Math.min(max,value))
 const approach=(current,target,rate,dt)=>current+(target-current)*(1-Math.exp(-rate*dt))
 
 export function createVehicleState(x=0,z=0,heading=0) {
-  return {x,z,heading,speed:0,vx:0,vz:0,steer:0,yawRate:0,distance:0,acceleration:0,lateral:0,slip:0,gear:1,offroad:false,throttle:0,brake:0,y:.028,vy:0,grounded:true,pitch:0,roll:0,pitchRate:0,rollRate:0,air:vehicleConfig.airCapacity,boost:0,lift:0,suction:true,augment:'rocket',gripLimit:vehicleConfig.grip,landing:0,jumps:0,cleared:0,crashed:false}
+  return {x,z,heading,speed:0,vx:0,vz:0,steer:0,yawRate:0,distance:0,acceleration:0,lateral:0,slip:0,gear:1,offroad:false,throttle:0,brake:0,y:.028,vy:0,grounded:true,pitch:0,roll:0,pitchRate:0,rollRate:0,air:vehicleConfig.airCapacity,boost:0,lift:0,assist:0,suction:true,augment:'rocket',gripLimit:vehicleConfig.grip,landing:0,jumps:0,cleared:0,crashed:false}
 }
 
 // illustrative bicycle model: limited tire grip, power falloff, drag and regenerative braking.
