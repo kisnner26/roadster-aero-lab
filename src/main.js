@@ -287,7 +287,8 @@ function init() {
   }
 
   function seek(time) {
-    timeline.seek(THREE.MathUtils.clamp(time,0,duration), false)
+    // Seeking updates state; this call owns the single render for that frame.
+    timeline.seek(THREE.MathUtils.clamp(time,0,duration), true)
     renderAt(state.time)
   }
   function tick(stamp) {
