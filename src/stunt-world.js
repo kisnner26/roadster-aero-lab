@@ -12,7 +12,7 @@ export function createStuntWorld(scene,roadMaterial,car,terrainMaterial,heightAt
   for(let i=0;i<vertices.count;i++)colors.push(.5,.54,.43)
   landscape.setAttribute('color',new THREE.Float32BufferAttribute(colors,3))
   landscape.computeVertexNormals();const ground=new THREE.Mesh(landscape,terrainMaterial);ground.receiveShadow=true;root.add(ground)
-  const asphalt=roadMaterial.clone();asphalt.map=roadMaterial.map.clone();asphalt.map.repeat.set(3,90);asphalt.map.needsUpdate=true
+  const asphalt=roadMaterial.clone();asphalt.map=roadMaterial.map.clone();asphalt.map.repeat.set(440,30);asphalt.map.needsUpdate=true
   const concrete=new THREE.MeshStandardMaterial({color:0x87918e,roughness:.9}),black=new THREE.MeshStandardMaterial({color:0x10171c,roughness:.7}),white=new THREE.MeshStandardMaterial({color:0xd3d9d9,metalness:.45,roughness:.3}),glass=new THREE.MeshStandardMaterial({color:0x16202a,metalness:.5,roughness:.2}),red=new THREE.MeshBasicMaterial({color:0xef332e})
   const boxes=createBoxBatch(root)
   const box=(size,position,material,parent=root,castShadow=true)=>boxes.add(size,position,material,parent,castShadow)
