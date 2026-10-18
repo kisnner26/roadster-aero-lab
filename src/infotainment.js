@@ -174,7 +174,8 @@ export function createInfotainment({car,audio,cabinLight,carPreview,graphics,onO
     texture.needsUpdate=true
     car.driverScreens?.forEach((texture,index)=>{
       const c=texture.image.getContext('2d');c.fillStyle='#050b10';c.fillRect(0,0,512,192);c.fillStyle='#e9f0f3';c.font='95px sans-serif';c.fillText(index?String(Math.round(Math.abs(state.speed)*3.6)):state.gear===-1?'r':'d',20,116)
-      c.font='22px monospace';c.fillStyle='#8dabbc';c.fillText(index?'km/h':state.augment||'studio',220,112);c.fillStyle='#ff6349';c.fillRect(20,152,472*(state.air===undefined?1:state.air/4),5);texture.needsUpdate=true
+      c.font='22px monospace';c.fillStyle='#8dabbc';c.fillText(index?'km/h':state.augment||'studio',index?220:20,index?112:140)
+      if(!index){c.strokeStyle='#8dabbc';c.lineWidth=2;c.beginPath();c.moveTo(250,110);c.lineTo(290,78);c.lineTo(380,66);c.lineTo(430,40);c.lineTo(470,60);c.lineTo(495,100);c.lineTo(250,110);c.stroke();c.beginPath();c.moveTo(300,78);c.lineTo(380,66);c.lineTo(420,100);c.stroke();for(const wx of [305,445]){c.beginPath();c.arc(wx,110,17,0,Math.PI*2);c.stroke()}};c.fillStyle='#ff6349';c.fillRect(20,152,472*(state.air===undefined?1:state.air/4),5);texture.needsUpdate=true
     })
   }
   function update() {
