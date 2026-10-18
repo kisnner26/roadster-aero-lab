@@ -1,5 +1,7 @@
 import * as THREE from 'three'
 import {HDRLoader} from 'three/addons/loaders/HDRLoader.js'
+import {createStuntWorld} from './stunt-world.js'
+import {inStuntArea,stuntSurface,collideStuntVehicles} from './stunt-physics.js'
 
 const seeded=i=>{const n=Math.sin(i*127.1+83.17)*43758.5453;return n-Math.floor(n)}
 
@@ -31,7 +33,7 @@ function foliageTexture() {
   const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=4;return texture
 }
 
-export function createDrivingWorld(scene) {
+export function createDrivingWorld(scene,car) {
   scene.background=new THREE.Color(0xa4b5bd)
   scene.fog=new THREE.FogExp2(0xa4b5bd,.00145)
   const curve=new THREE.CatmullRomCurve3([[-235,0,-110],[-115,0,-205],[115,0,-185],[255,0,-65],[220,0,115],[65,0,210],[-145,0,155],[-270,0,25]].map(p=>new THREE.Vector3(...p)),true,'catmullrom',.35)
@@ -42,10 +44,13 @@ export function createDrivingWorld(scene) {
   }
   const terrainGeometry=new THREE.PlaneGeometry(2400,2400,140,140);terrainGeometry.rotateX(-Math.PI/2)
   function heightAt(x,z) {
+    if(inStuntArea(x,z))return -.09
     const rise=Math.max(0,Math.hypot(x,z)-355)
     const ridges=Math.sin(x*.013+Math.sin(z*.008)*1.3)+Math.cos(z*.014+x*.003)*.65
     const detail=Math.sin(x*.049+z*.02)*Math.cos(z*.038)*Math.min(9,rise*.035)
-    return -.09+Math.pow(Math.max(0,ridges),1.6)*Math.min(92,rise*.29)+detail
+    const h=Math.pow(Math.max(0,ridges),1.6)*Math.min(92,rise*.29)+detail
+    const blend=x>450&&x<3000?THREE.MathUtils.smoothstep(Math.abs(z),130,330):1
+    return -.09+h*blend
   }
   const vertices=terrainGeometry.attributes.position,colors=[]
   for(let i=0;i<vertices.count;i++){
@@ -75,6 +80,7 @@ export function createDrivingWorld(scene) {
   textures.load(assetUrl('asphalt.jpg'),texture=>{texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(3,240);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=8;roadMaterial.map.dispose();roadMaterial.map=texture;roadMaterial.needsUpdate=true})
   textures.load(assetUrl('asphalt-normal.jpg'),texture=>{texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(3,240);texture.anisotropy=8;roadMaterial.normalMap=texture;roadMaterial.normalScale.set(.18,.18);roadMaterial.needsUpdate=true})
   ribbon(0,14,roadMaterial)
+  createStuntWorld(scene,roadMaterial,car,terrain.material,heightAt)
   const marking=new THREE.MeshBasicMaterial({color:0xd3d4c6})
   ribbon(-6.35,.12,marking,.03);ribbon(6.35,.12,marking,.03)
   const dummy=new THREE.Object3D()
@@ -105,6 +111,7 @@ export function createDrivingWorld(scene) {
   rails.count=railCount;scene.add(rails)
   const treeCandidates=[]
   const nearest=(x,z)=>{
+    if(inStuntArea(x,z))return {distance:Math.abs(z-Math.round(z/30)*30)<7?0:8,index:0,point:new THREE.Vector3(x,0,z),normal:new THREE.Vector3(0,0,1)}
     let best=Infinity,index=0
     for(let i=0;i<points.length;i+=2){const d=(points[i].x-x)**2+(points[i].z-z)**2;if(d<best){best=d;index=i}}
     return {distance:Math.sqrt(best),index,point:points[index],normal:normals[index]}
@@ -128,7 +135,9 @@ export function createDrivingWorld(scene) {
   scene.add(new THREE.HemisphereLight(0xc6dcf1,0x646047,2.2))
   const sun=new THREE.DirectionalLight(0xffe1b1,3.2);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-26;sun.shadow.camera.right=26;sun.shadow.camera.top=26;sun.shadow.camera.bottom=-26;sun.shadow.camera.near=.5;sun.shadow.camera.far=140;sun.shadow.normalBias=.035;scene.add(sun,sun.target)
   const mapPath=points.filter((_,i)=>i%8===0).map((p,i)=>`${i?'L':'M'}${(p.x+300)/600*160},${(p.z+240)/480*118}`).join(' ')+'Z'
-  return {curve,points,normals,length,nearest,sun,mapPath,heightAt,update(x,z){const h=heightAt(x,z);sun.position.set(x-35,h+70,z-30);sun.target.position.set(x,h,z);sky.position.set(x,0,z)},collision(state){
+  return {curve,points,normals,length,nearest,sun,mapPath,heightAt,surface(x,z,heading){if(inStuntArea(x,z))return stuntSurface(x,z,heading);const near=nearest(x,z);return {height:near.distance<7.4?.028:near.distance<9?-.008:heightAt(x,z)+.006,slope:0}},update(x,z){const h=heightAt(x,z);sun.position.set(x-35,h+70,z-30);sun.target.position.set(x,h,z);sky.position.set(x,0,z)},collision(state){
+    if(inStuntArea(state.x,state.z)){collideStuntVehicles(state);return}
+    if(state.y>2)return
     const distance=Math.hypot(state.x/84,state.z/60)
     if(distance<1){state.x/=distance||1;state.z/=distance||1;state.speed*=.15;state.vx*=.15;state.vz*=.15}
     const near=nearest(state.x,state.z)
