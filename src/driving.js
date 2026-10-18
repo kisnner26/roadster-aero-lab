@@ -14,6 +14,7 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
   const camera=new THREE.PerspectiveCamera(74,1,.025,6000)
   const keys=new Set(),touch={throttle:0,brake:0,left:0,right:0}
   const cameraPosition=new THREE.Vector3(),lookAt=new THREE.Vector3(),desiredCamera=new THREE.Vector3(),desiredTarget=new THREE.Vector3()
+  const previousCarPosition=new THREE.Vector3(),cameraTranslation=new THREE.Vector3()
   let active=false,paused=false,exterior=false,raf=0,last=0,accumulator=0,state=createVehicleState(),lap=1,lastProgress=0,lapTime=0,dashTimer=0,viewReady=false
   let headYaw=0,headPitch=0,dragging=false,dragX=0,dragY=0,hasDriven=false,screenFocus=false,previousExterior=false,area='circuit',notice=''
   let lastControls=''
@@ -92,6 +93,12 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
       desiredTarget.set(.025-Math.cos(yaw)*8,.94+Math.sin(pitch)*8,.335+Math.sin(yaw)*8)
     }
     if(!exterior||screenFocus){desiredCamera.applyMatrix4(car.root.matrixWorld);desiredTarget.applyMatrix4(car.root.matrixWorld)}
+    // Follow translation immediately; damp only orbit changes, not forward travel.
+    if(viewReady&&exterior&&!screenFocus&&state.loopAngle==null){
+      cameraTranslation.set(state.x,state.y,state.z).sub(previousCarPosition)
+      cameraPosition.add(cameraTranslation);lookAt.add(cameraTranslation)
+    }
+    previousCarPosition.set(state.x,state.y,state.z)
     const factor=!viewReady||!exterior||screenFocus?1:1-Math.exp(-dt*8)
     cameraPosition.lerp(desiredCamera,factor);lookAt.lerp(desiredTarget,factor)
     camera.up.set(0,1,0)
