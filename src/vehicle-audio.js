@@ -74,5 +74,5 @@ export function createVehicleAudio(onChange=()=>{},{createContext=()=>new AudioC
     oscillator.onended=()=>{oscillator.disconnect();gain.disconnect()}
   }
   page.addEventListener('visibilitychange',volume)
-  return {get enabled(){return enabled},setEnabled,setVolume(value){level=clamp(value,0,1);volume()},toggle:()=>setEnabled(!requested).catch(()=>false),setDriving(value){driving=value;update({speed:0,throttle:0,slip:0})},update,door}
+  return {get enabled(){return enabled},setEnabled,setVolume(value){level=clamp(value,0,1);volume()},toggle:()=>setEnabled(!requested),setDriving(value){driving=value;update({speed:0,throttle:0,slip:0})},update,door}
 }

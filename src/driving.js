@@ -54,6 +54,9 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
     if(Math.abs(state.speed)>.5){$('#drive-message').textContent='frena hasta detenerte para cambiar de marcha';return}
     state.gear*=-1;$('#drive-message').textContent=state.gear===1?'avance seleccionado':'reversa seleccionada';draw(0)
   }
+  function toggleAudio(){
+    audio.toggle().catch(()=>{notice='el navegador no pudo activar el sonido / m: reintentar';$('#drive-message').textContent=notice})
+  }
   function pause(value=!paused) {
     if(!value&&car.doors.some(({pivot})=>pivot.rotation.z>.5)){$('#drive-message').textContent='cierra las puertas desde la pantalla antes de continuar';return}
     paused=value;clearInput();audio.update({speed:0,throttle:0,slip:0})
@@ -184,7 +187,7 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
     if(event.code==='KeyP')pause()
     if(event.code==='KeyT')reset()
     if(event.code==='KeyR')reverse()
-    if(event.code==='KeyM')audio.toggle()
+    if(event.code==='KeyM')toggleAudio()
     if(event.code==='KeyN'){reset('stunts');notice='pista de saltos / shift: empuje / espacio: elevación'}
     if(event.code==='KeyG'){reset('loop');notice='loop de exhibición / q: succión / w: avanzar'}
     if(event.code==='KeyV'){reset('semi');notice='salto sobre camión / shift: empuje / espacio: elevación'}
@@ -195,7 +198,7 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
   addEventListener('keydown',keydown);addEventListener('keyup',event=>keys.delete(event.code));addEventListener('blur',()=>{if(active)pause(true)})
   document.addEventListener('visibilitychange',()=>{if(active&&document.hidden)pause(true)})
   $('#drive-camera').addEventListener('click',cameraMode);$('#drive-pause').addEventListener('click',()=>pause());$('#drive-reset').addEventListener('click',reset);$('#drive-gear').addEventListener('click',reverse)
-  $('#drive-sound').addEventListener('click',()=>audio.toggle())
+  $('#drive-sound').addEventListener('click',toggleAudio)
   const touchBindings=[['drive-throttle','throttle'],['drive-brake','brake'],['drive-left','left'],['drive-right','right']]
   touchBindings.forEach(([id,name])=>{
     const button=$('#'+id)

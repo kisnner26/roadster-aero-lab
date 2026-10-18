@@ -41,7 +41,7 @@ test('rapid toggles retain the latest intent even with out-of-order resumes',asy
   await audio.toggle()
   const last=audio.toggle()
   pending[1].resolve();await last
-  pending[0].reject(new Error('stale'));await first
+  pending[0].reject(new Error('stale'));await assert.rejects(first,/stale/)
   assert.equal(audio.enabled,true)
 })
 

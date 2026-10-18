@@ -365,7 +365,7 @@ function init() {
   $('#close-sources').addEventListener('click',()=>$('#sources').close())
   $('#sources').addEventListener('click',event=>{if(event.target===$('#sources')){const r=$('#sources').getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)$('#sources').close()}})
   $('#sources').addEventListener('close',()=>{if(wasPlaying)setPlaying(true)})
-  $('#sound').addEventListener('click',()=>audio.toggle())
+  $('#sound').addEventListener('click',()=>audio.toggle().catch(()=>$('#sound').setAttribute('aria-label','reintentar activar sonido ambiental')))
   driving=createDrivingMode({renderer,studio:scene,car,audio,reducedMotion:reducedMotion.matches,onFrame:stamp=>graphics.frame(stamp),onDashboard:()=>infotainment?.drawTexture(),onSceneRender:(scene,camera)=>{graphics.capture();cockpitScreen?.render(scene,camera,{interactive:Boolean(infotainment?.isOpen),allowed:driving.screenVisible})},isScreenOpen:()=>Boolean(infotainment?.isOpen),onExit:()=>{renderer.shadowMap.needsUpdate=true;renderAt(state.time);setPlaying(resumeStudio)}})
   let screenResume=false
   const carPreview=createCarPreview(renderer,car,scene.environment)
