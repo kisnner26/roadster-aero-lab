@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-import {HDRLoader} from 'three/addons/loaders/HDRLoader.js'
 import {createStuntWorld} from './stunt-world.js'
 import {inStuntArea,stuntSurface,collideStuntVehicles} from './stunt-physics.js'
 import {createTrackQuery} from './track-query.js'
@@ -36,8 +35,9 @@ function foliageTexture() {
 }
 
 export function createDrivingWorld(scene,car) {
-  scene.background=new THREE.Color(0xa4b5bd)
-  scene.fog=new THREE.FogExp2(0xa4b5bd,.00145)
+  scene.background=new THREE.Color(0x05070d)
+  scene.fog=new THREE.FogExp2(0x080c16,.0021)
+  scene.environmentIntensity=.22
   const {curve,points,length,normals,mapPath}=createCircuit()
   const terrainGeometry=new THREE.PlaneGeometry(2400,2400,140,140);terrainGeometry.rotateX(-Math.PI/2)
   function heightAt(x,z) {
@@ -61,7 +61,7 @@ export function createDrivingWorld(scene,car) {
   terrainGeometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));terrainGeometry.computeVertexNormals()
   const textures=new THREE.TextureLoader(),assetUrl=name=>`${import.meta.env.BASE_URL}assets/driving/${name}`
   const grass=textures.load(assetUrl('grass.webp'));grass.wrapS=grass.wrapT=THREE.RepeatWrapping;grass.repeat.set(200,200);grass.colorSpace=THREE.SRGBColorSpace;grass.anisotropy=4
-  const terrain=new THREE.Mesh(terrainGeometry,new THREE.MeshStandardMaterial({map:grass,vertexColors:true,roughness:1}));terrain.receiveShadow=true;scene.add(terrain)
+  const terrain=new THREE.Mesh(terrainGeometry,new THREE.MeshStandardMaterial({map:grass,vertexColors:true,roughness:1,color:0x6a7380}));terrain.receiveShadow=true;scene.add(terrain)
 
   function ribbon(offset,width,material,y=.02) {
     const positions=[],uvs=[],indices=[]
@@ -73,7 +73,7 @@ export function createDrivingWorld(scene,car) {
     const object=new THREE.Mesh(geometry,material);object.receiveShadow=true;scene.add(object);return object
   }
   ribbon(0,18,new THREE.MeshStandardMaterial({color:0x79796e,roughness:1}),-.015)
-  const roadMaterial=new THREE.MeshStandardMaterial({map:asphaltTexture(),roughness:.94,color:0xb2b6b9})
+  const roadMaterial=new THREE.MeshStandardMaterial({map:asphaltTexture(),roughness:.55,metalness:.12,color:0x9aa0a6})
   textures.load(assetUrl('asphalt.webp'),texture=>{
     texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(3,240);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=8
     roadMaterial.map.dispose();roadMaterial.map=texture;roadMaterial.needsUpdate=true
@@ -133,11 +133,40 @@ export function createDrivingWorld(scene,car) {
     for(let j=0;j<3;j++){dummy.position.set(x,base+h*.5,z);dummy.rotation.y=seeded(i)*6.28+j*Math.PI/3;dummy.scale.set(h*.65,h,1);dummy.updateMatrix();crowns.setMatrixAt(i*3+j,dummy.matrix)}
   })
   dummy.scale.set(1,1,1);scene.add(trunks,crowns)
+  // Night city: lamp posts with light pools, lit towers with neon bands, in the spirit of a Miami / LA skyline.
+  const glowTexture=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,224,170,1)');r.addColorStop(.25,'rgba(255,190,110,.45)');r.addColorStop(1,'rgba(255,170,90,0)');g.fillStyle=r;g.fillRect(0,0,64,64);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t})()
+  const lampCount=Math.floor(length/34),lampDummy=new THREE.Object3D(),lampGlow=[]
+  const poles=new THREE.InstancedMesh(new THREE.CylinderGeometry(.11,.16,9,6),new THREE.MeshStandardMaterial({color:0x2a2f35,metalness:.6,roughness:.5}),lampCount)
+  const heads=new THREE.InstancedMesh(new THREE.BoxGeometry(2.4,.16,.5),new THREE.MeshBasicMaterial({color:0xffe2b0,toneMapped:false}),lampCount)
+  const pools=new THREE.InstancedMesh(new THREE.CircleGeometry(10,24),new THREE.MeshBasicMaterial({map:glowTexture,transparent:true,opacity:.55,depthWrite:false,blending:THREE.AdditiveBlending,polygonOffset:true,polygonOffsetFactor:-2}),lampCount)
+  for(let i=0;i<lampCount;i++){
+    const t=i/lampCount,p=curve.getPointAt(t),tangent=curve.getTangentAt(t),side=i%2?1:-1,n=new THREE.Vector3(-tangent.z,0,tangent.x)
+    const base=new THREE.Vector3(p.x+n.x*side*12.2,0,p.z+n.z*side*12.2),yaw=-Math.atan2(n.z*side,n.x*side)
+    lampDummy.position.set(base.x,4.5,base.z);lampDummy.rotation.set(0,0,0);lampDummy.updateMatrix();poles.setMatrixAt(i,lampDummy.matrix)
+    lampDummy.position.set(base.x-n.x*side*1.1,9.05,base.z-n.z*side*1.1);lampDummy.rotation.set(0,yaw,0);lampDummy.updateMatrix();heads.setMatrixAt(i,lampDummy.matrix)
+    lampDummy.position.set(base.x-n.x*side*6,.06,base.z-n.z*side*6);lampDummy.rotation.set(-Math.PI/2,0,0);lampDummy.updateMatrix();pools.setMatrixAt(i,lampDummy.matrix)
+    lampGlow.push(base.x-n.x*side*1.1,9,base.z-n.z*side*1.1)
+  }
+  const glowGeometry=new THREE.BufferGeometry();glowGeometry.setAttribute('position',new THREE.Float32BufferAttribute(lampGlow,3))
+  const glow=new THREE.Points(glowGeometry,new THREE.PointsMaterial({map:glowTexture,size:30,sizeAttenuation:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));glow.frustumCulled=false
+  scene.add(poles,heads,pools,glow)
+  const buildingMaterial=new THREE.ShaderMaterial({fog:true,
+    uniforms:THREE.UniformsUtils.merge([THREE.UniformsLib.fog]),
+    vertexShader:'#include <common>\n#include <fog_pars_vertex>\nvarying vec3 vW;varying vec3 vN;varying float vSeed;varying float vTop;void main(){mat4 m=modelMatrix*instanceMatrix;vec4 w=m*vec4(position,1.);vW=w.xyz;vN=normalize(mat3(m)*normal);vSeed=fract(instanceMatrix[3].x*.0137+instanceMatrix[3].z*.0071);vTop=instanceMatrix[3].y+instanceMatrix[1][1]*.5;vec4 mvPosition=viewMatrix*w;gl_Position=projectionMatrix*mvPosition;\n#include <fog_vertex>\n}',
+    fragmentShader:'#include <fog_pars_fragment>\nvarying vec3 vW;varying vec3 vN;varying float vSeed;varying float vTop;float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}void main(){float wall=step(abs(vN.y),.5);float alongX=step(.5,abs(vN.z));vec2 grid=vec2((alongX>.5?vW.x:vW.z)/3.1,vW.y/3.6);vec2 cell=floor(grid),f=fract(grid);float win=step(.2,f.x)*step(f.x,.8)*step(.22,f.y)*step(f.y,.78);float r=hash(cell+vSeed*91.);float lit=step(.46,r)*win*wall;vec3 tint=mix(vec3(1.,.8,.48),vec3(.5,.78,1.),step(.68,hash(cell*1.9+vSeed*37.)));vec3 col=vec3(.04,.045,.06)+tint*lit*(.55+.7*hash(cell+3.));float band=step(abs(vW.y-(vTop-1.2)),.45)*wall;vec3 neon=vSeed<.33?vec3(1.,.18,.55):vSeed<.66?vec3(.1,.85,1.):vec3(1.,.5,.12);col+=neon*band*1.6;gl_FragColor=vec4(col,1.);\n#include <fog_fragment>\n}'})
+  const buildingList=[]
+  for(let i=0;i<2200&&buildingList.length<150;i++){
+    const x=(seeded(i+9000)*2-1)*500,z=(seeded(i+11000)*2-1)*420
+    if(Math.hypot(x/115,z/90)<1||nearest(x,z).distance<30||buildingList.some(b=>Math.hypot(b[0]-x,b[1]-z)<b[3]*1.6+22))continue
+    buildingList.push([x,z,18+seeded(i+500)**2*135,14+seeded(i+700)*16])
+  }
+  const buildings=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),buildingMaterial,buildingList.length)
+  buildingList.forEach(([x,z,height,width],i)=>{const base=heightAt(x,z)-3;lampDummy.position.set(x,base+height/2,z);lampDummy.rotation.set(0,seeded(i+1)*1.2,0);lampDummy.scale.set(width,height,width*(.8+seeded(i+2)*.5));lampDummy.updateMatrix();buildings.setMatrixAt(i,lampDummy.matrix)})
+  lampDummy.scale.set(1,1,1);buildings.frustumCulled=false;scene.add(buildings)
   const water=new THREE.Mesh(new THREE.CircleGeometry(1,100),new THREE.MeshStandardMaterial({color:0x496b7d,roughness:.28,metalness:.45}));water.rotation.x=-Math.PI/2;water.scale.set(83,59,1);water.position.set(0,-.045,0);scene.add(water)
-  const sky=new THREE.Mesh(new THREE.SphereGeometry(1800,32,24),new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,uniforms:{},vertexShader:'varying vec3 vDirection;void main(){vDirection=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:'varying vec3 vDirection;void main(){vec3 d=normalize(vDirection);float h=pow(max(d.y,0.),.42);vec3 c=mix(vec3(.66,.74,.77),vec3(.22,.39,.56),h);float sun=pow(max(dot(d,normalize(vec3(-.6,.36,-.5))),0.),260.);c+=vec3(1.,.78,.46)*sun*.65;gl_FragColor=vec4(c,1.);}' }));scene.add(sky)
-  new HDRLoader().load(assetUrl('sky.hdr'),texture=>{texture.mapping=THREE.EquirectangularReflectionMapping;scene.background=texture;scene.environment=texture;scene.backgroundIntensity=.8;scene.environmentIntensity=.65;sky.visible=false},undefined,()=>{sky.visible=true})
-  scene.add(new THREE.HemisphereLight(0xc6dcf1,0x646047,2.2))
-  const sun=new THREE.DirectionalLight(0xffe1b1,3.2);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-26;sun.shadow.camera.right=26;sun.shadow.camera.top=26;sun.shadow.camera.bottom=-26;sun.shadow.camera.near=.5;sun.shadow.camera.far=140;sun.shadow.normalBias=.035;scene.add(sun,sun.target)
+  const sky=new THREE.Mesh(new THREE.SphereGeometry(1800,32,24),new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,uniforms:{},vertexShader:'varying vec3 vDirection;void main(){vDirection=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:'varying vec3 vDirection;float hash(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}void main(){vec3 d=normalize(vDirection);float h=pow(max(d.y,0.),.5);vec3 c=mix(vec3(.17,.1,.2),vec3(.012,.02,.05),h);c+=vec3(.9,.35,.45)*pow(max(1.-abs(d.y)*2.2,0.),3.)*.12;vec3 cell=floor(d*260.);float star=step(.9965,hash(cell))*smoothstep(.08,.35,d.y);c+=vec3(.8,.88,1.)*star*(.4+.6*hash(cell+7.));float moon=pow(max(dot(d,normalize(vec3(-.55,.5,-.45))),0.),900.);c+=vec3(.85,.9,1.)*moon;gl_FragColor=vec4(c,1.);}' }));scene.add(sky)
+  scene.add(new THREE.HemisphereLight(0x5a6fb0,0x1a1626,.85))
+  const sun=new THREE.DirectionalLight(0x94aee8,.9);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-26;sun.shadow.camera.right=26;sun.shadow.camera.top=26;sun.shadow.camera.bottom=-26;sun.shadow.camera.near=.5;sun.shadow.camera.far=140;sun.shadow.normalBias=.035;scene.add(sun,sun.target)
   return {curve,points,normals,length,nearest,sun,mapPath,heightAt,surface(x,z,heading){if(inStuntArea(x,z))return stuntSurface(x,z,heading);const near=nearest(x,z);return {height:near.distance<7.4?.028:near.distance<9?-.008:heightAt(x,z)+.006,slope:0}},update(x,z){const h=heightAt(x,z);sun.position.set(x-35,h+70,z-30);sun.target.position.set(x,h,z);sky.position.set(x,0,z)},collision(state){
     if(inStuntArea(state.x,state.z)){collideStuntVehicles(state);return}
     if(state.y>2)return
@@ -146,6 +175,7 @@ export function createDrivingWorld(scene,car) {
     const near=nearest(state.x,state.z)
     const railIndex=Math.floor(near.index/(points.length-1)*Math.floor(length/5.2))
     if(near.distance>9.45&&near.distance<10.9&&railIndex%31>=5){const dx=state.x-near.point.x,dz=state.z-near.point.z,scale=9.3/near.distance;state.x=near.point.x+dx*scale;state.z=near.point.z+dz*scale;state.speed*=.5;state.vx*=.5;state.vz*=.5}
+    for(const [bx,bz,,width] of buildingList){const dx=state.x-bx,dz=state.z-bz,radius=width*.78+1.6;if(Math.abs(dx)>radius||Math.abs(dz)>radius)continue;const distance=Math.hypot(dx,dz);if(distance<radius){const push=radius/(distance||1);state.x=bx+dx*push;state.z=bz+dz*push;state.speed*=.2;state.vx*=.2;state.vz*=.2}}
     if(near.distance>14){
       const fx=Math.cos(state.heading),fz=Math.sin(state.heading)
       for(const [x,z] of treeCandidates){
