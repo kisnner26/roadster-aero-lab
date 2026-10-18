@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import {HDRLoader} from 'three/addons/loaders/HDRLoader.js'
 import {createStuntWorld} from './stunt-world.js'
 import {inStuntArea,stuntSurface,collideStuntVehicles} from './stunt-physics.js'
+import {createTrackQuery} from './track-query.js'
 
 const seeded=i=>{const n=Math.sin(i*127.1+83.17)*43758.5453;return n-Math.floor(n)}
 
@@ -110,11 +111,11 @@ export function createDrivingWorld(scene,car) {
   }
   rails.count=railCount;scene.add(rails)
   const treeCandidates=[]
+  const trackQuery=createTrackQuery(points,normals)
+  const stuntPoint=new THREE.Vector3(),stuntNormal=new THREE.Vector3(0,0,1)
   const nearest=(x,z)=>{
-    if(inStuntArea(x,z))return {distance:Math.abs(z-Math.round(z/30)*30)<7?0:8,index:0,point:new THREE.Vector3(x,0,z),normal:new THREE.Vector3(0,0,1)}
-    let best=Infinity,index=0
-    for(let i=0;i<points.length;i+=2){const d=(points[i].x-x)**2+(points[i].z-z)**2;if(d<best){best=d;index=i}}
-    return {distance:Math.sqrt(best),index,point:points[index],normal:normals[index]}
+    if(inStuntArea(x,z))return {distance:Math.abs(z-Math.round(z/30)*30)<7?0:8,index:0,point:stuntPoint.set(x,0,z),normal:stuntNormal}
+    return trackQuery(x,z)
   }
   for(let i=0;i<1350;i++){
     const x=(seeded(i+100)*2-1)*430,z=(seeded(i+2000)*2-1)*360
