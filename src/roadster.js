@@ -48,7 +48,7 @@ function canopy(parent) {
 // proportions reconstructed from the supplied renders, not tesla manufacturing geometry.
 export const referenceEnvelope={length:4.5,width:1.98,height:1.18,wheelbase:2.70}
 
-export function createRoadster() {
+export function createRoadster({createCanvas=()=>document.createElement('canvas')}={}) {
   const root=new THREE.Group(),shell=new THREE.Group(),details=new THREE.Group(),wheels=new THREE.Group()
   root.add(shell,details,wheels)
   const wheelX=[-1.34,1.36],wheelRadius=.355
@@ -112,7 +112,8 @@ export function createRoadster() {
   for(const sign of [-1,1]) {
     const pivot=new THREE.Group();pivot.position.set(-.75,.69,sign*.87);shell.add(pivot)
     const local=points=>points.map(([x,y,z])=>[x+.75,y-.69,z-sign*.87])
-    panel(local([[-.75,.68,sign*.945],[.88,.72,sign*.965],[.88,.31,sign*.93],[-.75,.27,sign*.91]]),paint,pivot)
+    const outerDoor=local([[-.75,.68,sign*.945],[.88,.72,sign*.965],[.88,.31,sign*.93],[-.75,.27,sign*.91]])
+    panel(sign>0?outerDoor.reverse():outerDoor,paint,pivot)
     panel(local([[-.72,.65,sign*.91],[.86,.69,sign*.93],[.86,.35,sign*.905],[-.72,.31,sign*.875]]),carbon,pivot)
     panel(local([[-.73,.725,sign*.91],[-.23,1.144,sign*.585],[.56,1.153,sign*.565],[.88,.78,sign*.94]]).reverse(),glass,pivot)
     line(local([[-.73,.725,sign*.91],[-.23,1.144,sign*.585],[.56,1.153,sign*.565],[.88,.78,sign*.94]]),.009,carbon,pivot)
@@ -171,12 +172,12 @@ export function createRoadster() {
   box([.84,.16,.17],upholstery,details,[.03,.44,0])
   const screen=box([.025,.235,.39],carbon,details,[-.37,.79,0]);screen.rotation.z=-.12
   box([.027,.002,.32],redLed,details,[-.352,.708,0])
-  const screenTexture=createScreenTexture()
+  const screenTexture=createScreenTexture(createCanvas)
   const screenSurface=mesh(new THREE.PlaneGeometry(.365,.205),new THREE.MeshBasicMaterial({map:screenTexture}),details,[-.349,.795,0]);screenSurface.rotation.y=Math.PI/2
   const driverScreens=[]
   for(const z of [-.4,.4]){
     box([.025,.075,.2],carbon,details,[-.67,.79,z])
-    const canvas=document.createElement('canvas');canvas.width=512;canvas.height=192
+    const canvas=createCanvas();canvas.width=512;canvas.height=192
     const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;driverScreens.push(texture)
     const face=mesh(new THREE.PlaneGeometry(.185,.065),new THREE.MeshBasicMaterial({map:texture}),details,[-.654,.794,z]);face.rotation.y=Math.PI/2
   }
@@ -234,8 +235,8 @@ export function createRoadster() {
   return {root,shell,details,wheels,wireMaterials,wireObjects,sections,exhaust,brakeLight,reverseLights,sectionMaterial,paint,glass,wheelCenters,doors,wing,plumeMaterial,liftPlumeMaterial,steering,screenTexture,screenSurface,driverScreens,seats}
 }
 
-function createScreenTexture() {
-  const canvas=document.createElement('canvas');canvas.width=512;canvas.height=288
+function createScreenTexture(createCanvas) {
+  const canvas=createCanvas();canvas.width=512;canvas.height=288
   const ctx=canvas.getContext('2d');ctx.fillStyle='#080e15';ctx.fillRect(0,0,512,288)
   ctx.fillStyle='#dce5eb';ctx.font='24px monospace';ctx.fillText('roadster',24,40)
   ctx.fillStyle='#7f919e';ctx.font='12px monospace';ctx.fillText('concept / system overview',24,65)
