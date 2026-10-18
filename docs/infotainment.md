@@ -1,11 +1,13 @@
 # pantalla interactiva
 
-`src/infotainment.js` contiene la interfaz y el ciclo de vida de las aplicaciones. es un diálogo html nativo, no una captura interactiva ni un iframe fingiendo ser chrome. la pantalla del modelo usa una textura sincronizada; tocar su superficie abre la interfaz ampliada mediante raycasting.
+`src/infotainment.js` contiene la interfaz y el ciclo de vida de las aplicaciones. es una sección html operativa, no un diálogo flotante. `cockpit-screen.js` la incorpora como un css3dobject hijo de la superficie del monitor; css3drenderer y webgl comparten cámara y transformaciones. youtube y los archivos locales se reproducen dentro de ese elemento real, no se capturan como imágenes.
+
+la interacción se habilita al tocar el monitor o pulsar `e`. la cámara se acerca al panel físico, con un campo de visión adaptado al aspecto de ventana; escape devuelve la vista. la capa dom se oculta en tercera persona o si la cámara no mira la cara frontal del monitor, para evitar que atraviese visualmente la carrocería. no se intenta una composición de profundidad arbitraria entre html y webgl.
 
 ## conexión con la escena
 
 - `getTelemetry` devuelve una copia del estado de conducción. el mapa y los indicadores no inventan datos de batería, autonomía o temperatura física.
-- `onOpen` pausa la conducción y libera las teclas; `onClose` devuelve el foco y mantiene la conducción pausada.
+- `onOpen` pausa la conducción y libera las teclas; `onClose` devuelve la cámara y el foco, mantiene la conducción pausada y no apaga el contenido del monitor.
 - `onVisualChange` redibuja la escena al cambiar el brillo, el volumen o la luz.
 - `onDoors` modifica los paneles del modelo; la conducción no continúa con puertas abiertas.
 - `car-preview.js` renderiza una miniatura de la geometría original en un render target, sin otro contexto webgl ni imágenes generadas.
@@ -20,10 +22,10 @@ el encabezado [x-frame-options](https://developer.mozilla.org/en-US/docs/Web/HTT
 
 ## multimedia
 
-youtube usa la [iframe player api](https://developers.google.com/youtube/iframe_api_reference), dominio youtube-nocookie, identificación de origen, controles nativos y errores explícitos. los vídeos dependen de las restricciones del autor, región y navegador; no se descargan ni se eluden restricciones. el api se carga solo tras solicitar un vídeo y el reproductor se destruye al cerrar la pantalla.
+youtube usa la [iframe player api](https://developers.google.com/youtube/iframe_api_reference), dominio youtube-nocookie, identificación de origen, controles nativos y errores explícitos. los vídeos dependen de las restricciones del autor, región y navegador; no se descargan ni se eluden restricciones. el api se carga solo tras solicitar un vídeo. cambiar de aplicación pausa el vídeo; alejar la cámara conserva el contenido en el monitor. salir de la página destruye el reproductor.
 
 los archivos locales usan `url.createobjecturl` y un elemento de vídeo nativo, también válido para audio. se revoca la url al quitar o sustituir el archivo y al salir de la página. el volumen del pie controla el coche y los archivos locales; youtube conserva su propio control nativo.
 
 ## comprobaciones
 
-`npm test` cubre enlaces de youtube, instantes, búsquedas, direcciones inseguras, preferencias corruptas y dinámica de conducción. las pruebas visuales se realizaron en escritorio y a 390 × 844: toque de la pantalla 3d, diálogo, teclado, pausa, vídeo incrustado, aviso de vídeo restringido, página compatible y reproducción de un wav de prueba sin subida.
+`npm test` cubre enlaces, direcciones inseguras, preferencias y dinámica. la verificación visual del monitor incluye carga y reproducción real de youtube sobre la superficie 3d, cambio de cámara y ausencia de hud flotante. el diseño anterior tenía una ventana ampliada y controles táctiles; las capturas antiguas se conservan como historial y no describen el modo de juego actual.
