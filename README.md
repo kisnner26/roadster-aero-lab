@@ -1,18 +1,27 @@
 # roadster aero lab
 
-secuencia visual interactiva sobre la geometría pública del tesla roadster, su aerodinámica y la escala real del falcon heavy.
+estudio tridimensional de forma, flujo y vuelo. una secuencia continua de 56 segundos sobre el tesla roadster de primera generación y falcon heavy.
 
 [ver sitio](https://kisnner26.github.io/roadster-aero-lab/)
 
-![captura real de roadster aero lab](public/assets/roadster-aero-lab.png)
+![estudio tridimensional del roadster](public/assets/roadster-studio.jpg)
 
 ## incluye
 
-- cinco escenas automáticas controlables con rueda, flechas o teclado
-- plano vectorial con cotas oficiales del manual roadster 2.5
-- proyecciones lateral, superior y frontal
-- campo de flujo aerodinámico cualitativo
-- comparación a escala real con falcon heavy y escena orbital fh-001
+- modelo paramétrico con carrocería, habitáculo, llantas, frenos y luces
+- cuatro capítulos: superficie, estructura, flujo y vuelo
+- iluminación de estudio, sombras, malla técnica y cotas proyectadas en 3d
+- líneas de corriente y partículas animadas mediante shaders
+- tierra procedural, estrellas y falcon heavy en la escena orbital
+- cámaras continuas, exploración táctil, navegación y línea de tiempo
+- sonido ambiental opcional, movimiento reducido y pausa al ocultar la pestaña
+- tipografías locales; ningún recurso remoto necesario durante la reproducción
+
+![campo de flujo cualitativo](public/assets/roadster-flow.jpg)
+
+## controles
+
+arrastra para orbitar. selecciona un capítulo o arrastra la línea de tiempo para buscar un instante. espacio pausa o reproduce; las flechas y la rueda cambian de capítulo. el sonido comienza únicamente al activarlo.
 
 ## desarrollo
 
@@ -36,4 +45,8 @@ npm run build
 - [falcon heavy](https://www.spacex.com/vehicles/falcon-heavy/)
 - [falcon user's guide](https://www.spacex.com/assets/media/falcon-users-guide-2025-05-09.pdf)
 
-proyecto educativo no afiliado a tesla, inc. las ilustraciones son reconstrucciones visuales, no archivos cad ni planos de fabricación.
+three.js, gsap y vite. la geometría, las cámaras y los shaders se evalúan desde un tiempo absoluto, permitiendo saltar entre instantes sin acumular simulación.
+
+proyecto independiente no afiliado a tesla ni spacex. las medidas citadas son referencias públicas; la carrocería es interpretativa y no un cad de fabricación. el flujo es cualitativo, no cfd. la escena orbital es una reconstrucción artística y sus objetos no comparten una escala física. el manual 2.5 documenta la referencia dimensional; no implica que el automóvil de la misión fuera esa variante.
+
+las fuentes barlow condensed, ibm plex mono y manrope se distribuyen con sus licencias sil open font license en `public/fonts`.
