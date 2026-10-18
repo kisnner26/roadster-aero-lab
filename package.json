@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "eslint .",
-    "test": "node --test"
+    "test": "node --test",
+    "benchmark:track": "node scripts/benchmark-track.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",
