@@ -14,7 +14,7 @@ const headliner=new THREE.MeshStandardMaterial({color:0x14171c,roughness:.98,met
 
 function mesh(geometry,material,parent,position=[0,0,0]) {
   const object=new THREE.Mesh(geometry,material)
-  object.position.set(...position);object.castShadow=true;object.receiveShadow=true;parent.add(object)
+  object.position.set(...position);object.castShadow=!material.isShaderMaterial;object.receiveShadow=true;parent.add(object)
   return object
 }
 function line(points,radius,material,parent) {
@@ -129,7 +129,7 @@ export function createRoadster() {
   box([.025,.145,.34],upholstery,details,[2.285,.53,0])
   box([.03,.014,.19],darkMetal,details,[2.305,.53,0])
   box([.19,.34,1.54],carbon,details,[2.23,.275,0])
-  const exhaust=new THREE.Group();root.add(exhaust)
+  const exhaust=new THREE.Group();exhaust.visible=false;root.add(exhaust)
   const plumeMaterial=new THREE.ShaderMaterial({uniforms:{uOpacity:{value:0}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
     vertexShader:'varying vec2 vUv;varying float vFacing;void main(){vUv=uv;vFacing=abs(normalize(normalMatrix*normal).z);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
     fragmentShader:'uniform float uOpacity;varying vec2 vUv;varying float vFacing;void main(){float a=pow(clamp(vFacing,0.,1.),1.8)*pow(clamp(vUv.y,0.,1.),1.5);gl_FragColor=vec4(.72,.84,1.,a*uOpacity);}'})
@@ -215,19 +215,20 @@ export function createRoadster() {
     box([.07,.14,.045],darkMetal,wheel,[.15,0,sign*.134])
     for(let t=0;t<4;t++)mesh(new THREE.TorusGeometry(wheelRadius,.002,4,72),carbon,wheel,[0,0,-.08+t*.052])
   }
-  const wireMaterials=[]
+  const wireMaterials=[],wireObjects=[]
   const shellMeshes=[]
   shell.traverse(object=>{if(object.isMesh)shellMeshes.push(object)})
   shellMeshes.forEach(object=>{
     const material=new THREE.LineBasicMaterial({color:0x9dbfce,transparent:true,opacity:0})
     wireMaterials.push(material)
     const lines=new THREE.LineSegments(new THREE.EdgesGeometry(object.geometry,12),material)
+    lines.visible=false;wireObjects.push(lines)
     object.add(lines)
   })
-  const sections=new THREE.Group();root.add(sections)
+  const sections=new THREE.Group();sections.visible=false;root.add(sections)
   const sectionMaterial=new THREE.LineBasicMaterial({color:0x85b9d2,transparent:true,opacity:0})
   for(let i=6;i<loops.length;i+=14)sections.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(loops[i].map(p=>v(...p))),sectionMaterial))
-  return {root,shell,details,wheels,wireMaterials,sectionMaterial,paint,glass,wheelCenters,doors,wing,plumeMaterial,liftPlumeMaterial,steering,screenTexture,screenSurface,driverScreens,seats}
+  return {root,shell,details,wheels,wireMaterials,wireObjects,sections,exhaust,sectionMaterial,paint,glass,wheelCenters,doors,wing,plumeMaterial,liftPlumeMaterial,steering,screenTexture,screenSurface,driverScreens,seats}
 }
 
 function createScreenTexture() {

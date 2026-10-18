@@ -7,7 +7,7 @@ export function createCarPreview(renderer,car,environment) {
   model.traverse(object=>{
     if(object.isLine||object.isPoints)object.visible=false
     if(!object.isMesh)return
-    if(object.material===car.plumeMaterial){object.visible=false;return}
+    if(object.material===car.plumeMaterial||object.material===car.liftPlumeMaterial){object.visible=false;return}
     const copy=material=>material.clone()
     object.material=Array.isArray(object.material)?object.material.map(copy):copy(object.material)
   })

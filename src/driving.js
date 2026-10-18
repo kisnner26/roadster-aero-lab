@@ -65,6 +65,7 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
     car.root.rotation.set(reducedMotion?0:-state.lateral*.003,Math.PI-state.heading,reducedMotion?0:-state.acceleration*.0015)
     car.root.rotateZ(-state.pitch);car.root.rotateX(state.roll)
     car.plumeMaterial.uniforms.uOpacity.value=state.boost*.48
+    car.exhaust.visible=Boolean(state.boost||state.lift)
     if(car.liftPlumeMaterial)car.liftPlumeMaterial.uniforms.uOpacity.value=state.lift*.4
     car.wheels.visible=true
     if(car.seats){car.seats[0].visible=state.augment!=='rocket';car.seats[1].visible=true}
@@ -123,6 +124,7 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
   async function enter() {
     active=true;paused=false;exterior=false;screenFocus=false;last=0;accumulator=0
     worldScene.add(car.root);car.doors.forEach(({pivot})=>pivot.rotation.set(0,0,0));car.wireMaterials.forEach(material=>material.opacity=0);car.sectionMaterial.opacity=0;car.plumeMaterial.uniforms.uOpacity.value=0
+    car.sections.visible=false;car.wireObjects.forEach(object=>object.visible=false)
     $('#experience').dataset.mode='drive';$('#drive-hud').hidden=false
     $('#drive-toggle').setAttribute('aria-pressed','true');$('#drive-toggle').setAttribute('aria-label','salir del modo de conducción');$('#drive-toggle').textContent='salir de pov'
     $('#viewport').setAttribute('tabindex','0');$('#viewport').setAttribute('aria-describedby','drive-instructions');$('#viewport').focus()

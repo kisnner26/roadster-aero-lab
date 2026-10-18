@@ -249,6 +249,9 @@ function init() {
     car.root.updateMatrixWorld(true)
     solidMaterials.forEach((opacity,material)=>{ material.opacity=opacity*(1-wireAmount*.88);material.transparent=material.opacity<.999 })
     car.plumeMaterial.uniforms.uOpacity.value=flight*.22
+    car.exhaust.visible=flight>.001
+    car.sections.visible=wireAmount>.001
+    car.wireObjects.forEach(object=>object.visible=wireAmount>.001)
     car.wireMaterials.forEach(material=>{material.opacity=wireAmount*.17})
     car.sectionMaterial.opacity=wireAmount*.66
     car.wireMaterials.forEach((material,i)=>{if(i>0)material.opacity=wireAmount*.45})
