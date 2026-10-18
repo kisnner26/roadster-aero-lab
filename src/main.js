@@ -415,13 +415,13 @@ function createFlow() {
   }
   const uniforms={uTime:{value:0},uOpacity:{value:0}}
   const material=new THREE.ShaderMaterial({uniforms,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,vertexShader:'attribute float phase; attribute float lane; varying float vPhase; varying float vLane; void main(){vPhase=phase;vLane=lane;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:'uniform float uTime;uniform float uOpacity;varying float vPhase;varying float vLane;void main(){float trail=pow(fract(vPhase*2.-uTime*.22+vLane*.13),10.);float edge=smoothstep(0.,.12,vPhase)*(1.-smoothstep(.8,1.,vPhase));vec3 col=mix(vec3(.35,.58,.7),vec3(1.,.26,.12),step(.88,fract(vLane*.19)));gl_FragColor=vec4(col,uOpacity*edge*(.08+trail*.9));}'})
-  for(let lane=0;lane<68;lane++){
-    const g=new THREE.BufferGeometry()
-    g.setAttribute('position',new THREE.Float32BufferAttribute(positions.slice(lane*128*3,(lane+1)*128*3),3))
-    g.setAttribute('phase',new THREE.Float32BufferAttribute(phases.slice(lane*128,(lane+1)*128),1))
-    g.setAttribute('lane',new THREE.Float32BufferAttribute(lanes.slice(lane*128,(lane+1)*128),1))
-    root.add(new THREE.Line(g,material))
-  }
+  const geometry=new THREE.BufferGeometry(),segments=[]
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3))
+  geometry.setAttribute('phase',new THREE.Float32BufferAttribute(phases,1))
+  geometry.setAttribute('lane',new THREE.Float32BufferAttribute(lanes,1))
+  for(let lane=0;lane<68;lane++)for(let i=0;i<127;i++)segments.push(lane*128+i,lane*128+i+1)
+  geometry.setIndex(segments)
+  root.add(new THREE.LineSegments(geometry,material))
   const pointGeometry=new THREE.BufferGeometry()
   pointGeometry.setAttribute('position',new THREE.Float32BufferAttribute(pointPositions,3))
   pointGeometry.setAttribute('aData',new THREE.Float32BufferAttribute(pointData,3))
