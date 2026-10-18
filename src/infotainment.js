@@ -43,9 +43,13 @@ export function createInfotainment({car,audio,cabinLight,carPreview,graphics,onO
       <footer class="os-dock"><div class="os-dock-climate">${icon('climate')}<button id="os-temp-down" aria-label="bajar temperatura">−</button><output id="os-temp" aria-live="polite">21°</output><button id="os-temp-up" aria-label="subir temperatura">+</button><span>clima conceptual</span></div><div class="os-dock-range">${icon('light')}<label class="sr-only" for="os-brightness">brillo de pantalla</label><input id="os-brightness" type="range" min="35" max="100" value="90"><output id="os-brightness-value" for="os-brightness">90%</output></div><div class="os-dock-range"><button id="os-audio" aria-label="activar sonido del coche" aria-pressed="false">${icon('sound')}</button><label class="sr-only" for="os-volume">volumen del coche y archivos locales</label><input id="os-volume" type="range" min="0" max="100" value="65"><output id="os-volume-value" for="os-volume">65%</output></div><span class="os-dock-label">roadster / independent concept</span></footer>
     </div>`
   document.body.append(dialog)
-  const $=selector=>dialog.querySelector(selector)
+  const nodes=new Map()
+  const $=selector=>{if(!nodes.has(selector))nodes.set(selector,dialog.querySelector(selector));return nodes.get(selector)}
   $('.os-car-image img').replaceWith(carPreview.canvas)
-  let app='map',player=null,playerGeneration=0,objectUrl=null,returnFocus=null,history=[],lastSample=0,doorOpen=false,lastTexture=0
+  let app='map',player=null,playerGeneration=0,objectUrl=null,returnFocus=null,history=[],lastSample=0,doorOpen=false,textureSignature='',mapPath='',mapShape=null
+  const clockFormatter=new Intl.DateTimeFormat('es',{hour:'2-digit',minute:'2-digit',hour12:false})
+  const textureContext=car.screenTexture.image.getContext('2d')
+  const track=document.querySelector('#drive-map-track')
   const localPlayer=$('#os-local-player')
   localPlayer.setAttribute('controlslist','nofullscreen noremoteplayback');localPlayer.disablePictureInPicture=true
   const sample=()=>getTelemetry()||{speed:0,distance:0,steer:0,acceleration:0,lateral:0,slip:0,gear:1,x:0,z:0,heading:0,active:false}
@@ -153,13 +157,17 @@ export function createInfotainment({car,audio,cabinLight,carPreview,graphics,onO
   $('#os-door-control').addEventListener('click',()=>{doorOpen=onDoors();update();drawTexture();setTimeout(()=>carPreview.draw(),950)})
 
   function drawTexture() {
-    const texture=car.screenTexture,ctx=texture.image.getContext('2d'),state=sample()
+    const texture=car.screenTexture,ctx=textureContext,state=sample()
+    const signature=[app,settings.temperature,Math.round(Math.abs(state.speed)*3.6),state.gear,state.augment,Math.round((state.air??4)*25),Math.round(state.x),Math.round(state.z)].join('/')
+    if(signature===textureSignature)return
+    textureSignature=signature
     ctx.fillStyle='#0b1118';ctx.fillRect(0,0,512,288)
     ctx.fillStyle='#9baebc';ctx.font='13px monospace';ctx.fillText('roadster os / '+({map:'navigation',web:'browser',video:'youtube',media:'library',car:'vehicle'}[app]),20,27)
     ctx.fillStyle='#f2f5f6';ctx.font='68px sans-serif';ctx.fillText(String(Math.round(Math.abs(state.speed)*3.6)),22,110)
     ctx.font='12px monospace';ctx.fillStyle='#93a8b8';ctx.fillText('km/h',25,133)
-    const path=document.querySelector('#drive-map-track')?.getAttribute('d')
-    if(path){ctx.save();ctx.translate(255,42);ctx.scale(1.35,1.35);ctx.strokeStyle='#879ca8';ctx.lineWidth=2;ctx.stroke(new Path2D(path));ctx.fillStyle='#ff593b';ctx.beginPath();ctx.arc((state.x+300)/600*160,(state.z+240)/480*118,3,0,Math.PI*2);ctx.fill();ctx.restore()}
+    const path=track?.getAttribute('d')
+    if(path!==mapPath){mapPath=path;mapShape=path?new Path2D(path):null}
+    if(mapShape){ctx.save();ctx.translate(255,42);ctx.scale(1.35,1.35);ctx.strokeStyle='#879ca8';ctx.lineWidth=2;ctx.stroke(mapShape);ctx.fillStyle='#ff593b';ctx.beginPath();ctx.arc((state.x+300)/600*160,(state.z+240)/480*118,3,0,Math.PI*2);ctx.fill();ctx.restore()}
     ctx.fillStyle='#1f2a36';ctx.fillRect(0,222,512,66)
     for(const [i,label] of ['ruta','web','vídeo','media','coche'].entries()){ctx.fillStyle=['map','web','video','media','car'][i]===app?'#ff604b':'#c6d0d9';ctx.font='15px sans-serif';ctx.fillText(label,20+i*100,250)}
     ctx.fillStyle='#a9bcc9';ctx.font='11px monospace';ctx.fillText(settings.temperature+'°  /  tocar para explorar',20,276)
@@ -172,13 +180,14 @@ export function createInfotainment({car,audio,cabinLight,carPreview,graphics,onO
   function update() {
     const state=sample(),stamp=performance.now()
     if(stamp-lastSample>500){history.push(Math.abs(state.speed)*3.6);if(history.length>60)history.shift();lastSample=stamp}
+    if(!focused&&dialog.dataset.visible!=='true')return
     {
-      $('#os-clock').textContent=new Intl.DateTimeFormat('es',{hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date())
+      const clock=clockFormatter.format(new Date());if($('#os-clock').textContent!==clock)$('#os-clock').textContent=clock
       qualityControls.querySelectorAll('[data-quality]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.quality===graphics.mode)))
       $('#os-render-stats').textContent=`escala ${graphics.ratio.toFixed(2)}× / resolución adaptada a la ventana`
       $('.os-park').textContent=state.active?(state.paused?'p · pausa':state.gear===-1?'r · reversa':'d · conducción'):'p · estudio'
       $('#os-speed').textContent=Math.round(Math.abs(state.speed)*3.6)
-      $('#os-distance').replaceChildren(document.createTextNode((Math.abs(state.distance)/1000).toFixed(2)+' '));const unit=document.createElement('small');unit.textContent='km';$('#os-distance').append(unit)
+      $('#os-distance').firstChild.nodeValue=(Math.abs(state.distance)/1000).toFixed(2)+' '
       $('#os-surface').textContent=state.offroad?'grava':'asfalto'
       const provingGround=state.active&&state.area!=='circuit'
       const route=provingGround?'M8 22H152M8 47H152M8 72H152M8 97H152':document.querySelector('#drive-map-track').getAttribute('d')
@@ -189,7 +198,7 @@ export function createInfotainment({car,audio,cabinLight,carPreview,graphics,onO
       $('#os-map-location').toggleAttribute('hidden',!state.active)
       $('#os-heading').textContent='rumbo '+String(Math.round(((state.heading*180/Math.PI)%360+360)%360)%360).padStart(3,'0')+'°'
       $('#os-lap').textContent=provingGround?`saltos ${state.jumps} / vehículos ${state.cleared}`:state.active?document.querySelector('#drive-lap').textContent:'estudio / sin conducción'
-      for(const [id,value,unit] of [['acceleration',state.acceleration.toFixed(2),'m/s²'],['lateral',(state.lateral/9.81).toFixed(2),'g'],['steer',(state.steer*180/Math.PI).toFixed(1),'°'],['slip',Math.round(Math.min(1,state.slip)*100),'%']]){$('#os-'+id).replaceChildren(document.createTextNode(value+' '));const small=document.createElement('small');small.textContent=unit;$('#os-'+id).append(small)}
+      for(const [id,value] of [['acceleration',state.acceleration.toFixed(2)],['lateral',(state.lateral/9.81).toFixed(2)],['steer',(state.steer*180/Math.PI).toFixed(1)],['slip',Math.round(Math.min(1,state.slip)*100)]])$('#os-'+id).firstChild.nodeValue=value+' '
       $('#os-speed-history').setAttribute('d',history.map((speed,index)=>`${index?'L':'M'}${index/59*600},${96-Math.min(250,speed)/250*90}`).join(' '))
       $('#os-audio').setAttribute('aria-pressed',String(audio.enabled));$('#os-audio').setAttribute('aria-label',audio.enabled?'silenciar sonido del coche':'activar sonido del coche')
       doorOpen=car.doors[0].pivot.rotation.z>.5
@@ -199,7 +208,6 @@ export function createInfotainment({car,audio,cabinLight,carPreview,graphics,onO
       $('#os-air-status').textContent=state.active?`${state.augment} / aire ${Math.round(state.air/4*100)}% / ${state.grounded?'suelo':'vuelo'} / superados ${state.cleared}`:'estudio independiente'
       $('#os-surface').textContent=state.active?state.grounded?(state.offroad?'grava':'asfalto'):`${Math.max(0,state.y).toFixed(1)} m`:'estudio'
     }
-    if(stamp-lastTexture>250&&!document.hidden){drawTexture();lastTexture=stamp}
   }
   const timer=setInterval(()=>{if(!document.hidden)update()},250)
   addEventListener('pagehide',event=>{if(!event.persisted)clearInterval(timer);destroyYouTube();clearLocal();stopBrowser()})
