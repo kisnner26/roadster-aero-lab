@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import {stuntRamps,stuntVehicles,stuntLoop} from './stunt-physics.js'
+import {createBoxBatch} from './static-boxes.js'
 
 export function createStuntWorld(scene,roadMaterial,car,terrainMaterial,heightAt) {
   const root=new THREE.Group();scene.add(root)
@@ -12,11 +13,11 @@ export function createStuntWorld(scene,roadMaterial,car,terrainMaterial,heightAt
   landscape.computeVertexNormals();const ground=new THREE.Mesh(landscape,terrainMaterial);ground.receiveShadow=true;root.add(ground)
   const asphalt=roadMaterial.clone();asphalt.map=roadMaterial.map.clone();asphalt.map.repeat.set(3,90);asphalt.map.needsUpdate=true
   const concrete=new THREE.MeshStandardMaterial({color:0x87918e,roughness:.9}),black=new THREE.MeshStandardMaterial({color:0x10171c,roughness:.7}),white=new THREE.MeshStandardMaterial({color:0xd3d9d9,metalness:.45,roughness:.3}),glass=new THREE.MeshStandardMaterial({color:0x16202a,metalness:.5,roughness:.2}),red=new THREE.MeshBasicMaterial({color:0xef332e})
-  function box(size,position,material,parent=root){const mesh=new THREE.Mesh(new THREE.BoxGeometry(...size),material);mesh.position.set(...position);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh}
-  const slab=box([2400,.1,240],[1700,-.065,0],concrete)
-  slab.receiveShadow=true
+  const boxes=createBoxBatch(root)
+  const box=(size,position,material,parent=root,castShadow=true)=>boxes.add(size,position,material,parent,castShadow)
+  box([2400,.1,240],[1700,-.065,0],concrete,root,false)
   const road=new THREE.Mesh(new THREE.PlaneGeometry(2200,148),asphalt);road.rotation.x=-Math.PI/2;road.position.set(1700,.02,8);road.receiveShadow=true;root.add(road)
-  for(let i=0;i<110;i++)for(const z of [-29,15,51])box([9,.012,.14],[620+i*20,.037,z],white)
+  for(let i=0;i<110;i++)for(const z of [-29,15,51])box([9,.012,.14],[620+i*20,.037,z],white,root,false)
   for(const ramp of stuntRamps){
     const geometry=new THREE.BufferGeometry(),positions=[],indices=[]
     for(let i=0;i<=32;i++){const t=i/32,height=ramp.height*(ramp.landing?1-t:ramp.curved?t*t:t);for(const side of [-1,1])positions.push(ramp.x+t*ramp.length,.025+height,ramp.z+side*ramp.width/2);if(i<32){const a=i*2;indices.push(a,a+1,a+2,a+1,a+3,a+2)}}
@@ -69,5 +70,6 @@ export function createStuntWorld(scene,roadMaterial,car,terrainMaterial,heightAt
     root.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),180,.12,6,false),white))
   }
   sign('05 / suction loop',1050,-82)
+  boxes.flush()
   return {root}
 }
