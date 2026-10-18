@@ -19,6 +19,7 @@ reconstrucción tridimensional de un concepto roadster a partir de imágenes y v
 - pov desde el asiento del conductor y cámara exterior; tablero, mapa y contador de vueltas
 - motor eléctrico sintetizado, viento, rodadura y derrape ligados al estado del coche
 - circuito con texturas locales, cielo hdr, guardarraíles y controles táctiles
+- roadster os: pantalla interactiva con navegación, youtube, archivos locales y ajustes de cabina
 - tierra procedural, estrellas y una escena especulativa de propulsión
 - cámaras continuas, exploración táctil, navegación y línea de tiempo
 - sonido ambiental opcional, movimiento reducido y pausa al ocultar la pestaña
@@ -33,6 +34,20 @@ reconstrucción tridimensional de un concepto roadster a partir de imágenes y v
 arrastra para orbitar. selecciona un capítulo o arrastra la línea de tiempo para buscar un instante. el botón `puertas` abre o cierra ambos paneles. espacio pausa o reproduce; las flechas y la rueda cambian de capítulo. el sonido comienza únicamente al activarlo.
 
 pulsa `conducir` para entrar al circuito y activar el audio. `w` / `↑` acelera, `s` / `↓` frena y `a` / `d` gira. espacio acciona el freno de mano; `c` cambia de cámara, `r` selecciona reversa al detenerte, `p` pausa, `t` reinicia y escape vuelve al estudio. en móvil hay dirección y pedales para mantener pulsados. arrastra la vista para mirar a los lados desde el asiento. la conducción se pausa al perder el foco o esconder la pestaña.
+
+pulsa `pantalla`, `e` o toca la pantalla 3d desde el habitáculo para abrir roadster os. escape cierra la interfaz y devuelve el foco. la conducción queda pausada hasta continuar; las puertas deben estar cerradas. el mapa, el historial de velocidad y la telemetría usan el estado de la simulación. la miniatura renderiza la misma geometría del coche.
+
+![roadster os](public/assets/roadster-os.jpg)
+
+### pantalla y conectividad
+
+- youtube: pega un enlace normal, corto o de shorts. usa el reproductor oficial sin autoplay; los vídeos restringidos ofrecen salida a youtube.
+- navegador: búsquedas reales en google y direcciones externas en otra pestaña; vista interna aislada para webs que permiten iframes. no emula chrome ni elude restricciones de los sitios.
+- biblioteca: audio y vídeo desde el dispositivo mediante urls de objeto; no se suben archivos. cambiar de aplicación o cerrar la pantalla pausa la reproducción.
+- ajustes: volumen del coche y archivos locales, brillo de la interfaz y luz real de la escena. la temperatura es conceptual, no una simulación térmica.
+- privacidad: youtube solo se conecta al cargar un vídeo. la vista web solo carga la dirección solicitada. únicamente las preferencias de cabina se guardan en localstorage; no se guardan búsquedas ni archivos.
+
+[vista móvil](public/assets/roadster-os-mobile.jpg) · [youtube reproduciendo](public/assets/roadster-os-youtube.jpg) · [arquitectura y límites](docs/infotainment.md)
 
 ![habitáculo reconstruido](public/assets/roadster-cabin.jpg)
 
