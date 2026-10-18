@@ -74,10 +74,17 @@ export function createDrivingWorld(scene,car) {
   }
   ribbon(0,18,new THREE.MeshStandardMaterial({color:0x79796e,roughness:1}),-.015)
   const roadMaterial=new THREE.MeshStandardMaterial({map:asphaltTexture(),roughness:.94,color:0xb2b6b9})
-  textures.load(assetUrl('asphalt.webp'),texture=>{texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(3,240);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=8;roadMaterial.map.dispose();roadMaterial.map=texture;roadMaterial.needsUpdate=true})
-  textures.load(assetUrl('asphalt-normal.webp'),texture=>{texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(3,240);texture.anisotropy=8;roadMaterial.normalMap=texture;roadMaterial.normalScale.set(.18,.18);roadMaterial.needsUpdate=true})
+  textures.load(assetUrl('asphalt.webp'),texture=>{
+    texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(3,240);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=8
+    roadMaterial.map.dispose();roadMaterial.map=texture;roadMaterial.needsUpdate=true
+    stuntWorld.asphalt.map.dispose();stuntWorld.asphalt.map=texture.clone();stuntWorld.asphalt.map.repeat.set(3,90);stuntWorld.asphalt.map.needsUpdate=true;stuntWorld.asphalt.needsUpdate=true
+  })
+  textures.load(assetUrl('asphalt-normal.webp'),texture=>{
+    texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(3,240);texture.anisotropy=8;roadMaterial.normalMap=texture;roadMaterial.normalScale.set(.18,.18);roadMaterial.needsUpdate=true
+    stuntWorld.asphalt.normalMap=texture.clone();stuntWorld.asphalt.normalMap.repeat.set(3,90);stuntWorld.asphalt.normalMap.needsUpdate=true;stuntWorld.asphalt.normalScale.copy(roadMaterial.normalScale);stuntWorld.asphalt.needsUpdate=true
+  })
   ribbon(0,14,roadMaterial)
-  createStuntWorld(scene,roadMaterial,car,terrain.material,heightAt)
+  const stuntWorld=createStuntWorld(scene,roadMaterial,car,terrain.material,heightAt)
   const marking=new THREE.MeshBasicMaterial({color:0xd3d4c6})
   ribbon(-6.35,.12,marking,.03);ribbon(6.35,.12,marking,.03)
   const dummy=new THREE.Object3D()

@@ -73,5 +73,5 @@ export function createStuntWorld(scene,roadMaterial,car,terrainMaterial,heightAt
   }
   sign('05 / suction loop',1050,-82)
   boxes.flush()
-  return {root}
+  return {root,asphalt}
 }
