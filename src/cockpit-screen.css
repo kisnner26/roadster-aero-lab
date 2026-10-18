@@ -2,6 +2,10 @@
 #experience:has(.cockpit-dom){overflow:clip}
 #infotainment{width:1024px!important;height:576px!important;max-width:none!important;max-height:none!important;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:hidden!important;background:#10151b;user-select:auto!important;backface-visibility:hidden;contain:layout paint}
 #infotainment .os-shell{width:1024px;height:576px!important;display:flex;flex-direction:column}
+/* Keep hardware-decoded video out of filtered compositing groups in the 3d plane. */
+#infotainment .os-shell{position:relative;filter:none}
+#infotainment .os-shell::after{content:'';position:absolute;inset:0;background:#000;opacity:calc(1 - var(--os-brightness));pointer-events:none;z-index:10}
+#infotainment .os-theater,#infotainment .os-local-stage,#infotainment .os-browser-preview{position:relative;z-index:11}
 #infotainment .os-topbar{height:44px;min-height:44px;padding:0 16px}#infotainment .os-brand{gap:12px}#infotainment .os-mark{font-size:24px}#infotainment h2{font-size:18px}#infotainment .os-system{gap:12px}#infotainment .os-system .os-park{display:block}#infotainment .os-system button{width:44px}#infotainment .os-build{display:none}
 #infotainment .os-body{display:grid;grid-template-columns:200px minmax(0,1fr);flex:1;min-height:0;overflow:hidden}
 #infotainment .os-vehicle{display:flex;flex-direction:column;padding:16px;border-right:1px solid #ffffff14;min-height:0}#infotainment .os-vehicle-top{display:flex}#infotainment .os-live{display:none}#infotainment .os-speed{margin:16px 0 0}#infotainment .os-speed strong{font-size:82px}#infotainment .os-car-image{margin:0 -16px 12px}#infotainment .os-car-image canvas{height:124px}#infotainment .os-car-image>span{display:none}#infotainment .os-trip{padding:12px 0}#infotainment .os-link-note{font-size:9px;padding:8px 0}#infotainment #os-air-status{font-size:10px;line-height:1.8;margin-top:12px}
