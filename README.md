@@ -1,6 +1,6 @@
 # roadster aero lab
 
-estudio tridimensional de forma, flujo y vuelo. una secuencia continua de 56 segundos sobre el tesla roadster de primera generación y falcon heavy.
+reconstrucción tridimensional de un concepto roadster a partir de las imágenes y el vídeo de referencia proporcionados. una secuencia continua de 70 segundos con carrocería en cuña, puertas elevables, habitáculo y aerodinámica visual.
 
 [ver sitio](https://kisnner26.github.io/roadster-aero-lab/)
 
@@ -8,11 +8,13 @@ estudio tridimensional de forma, flujo y vuelo. una secuencia continua de 56 seg
 
 ## incluye
 
-- modelo paramétrico con carrocería, habitáculo, llantas, frenos y luces
-- cuatro capítulos: superficie, estructura, flujo y vuelo
-- iluminación de estudio, sombras, malla técnica y cotas proyectadas en 3d
+- carrocería blanca facetada, cabina cerrada y luces de ancho completo
+- puertas animadas, cinco radios por rueda, alerón y cuatro boquillas traseras
+- cinco capítulos: superficie, estructura, flujo, habitáculo y vuelo conceptual
+- iluminación de estudio, sombras, malla técnica y proporciones proyectadas en 3d
 - líneas de corriente y partículas animadas mediante shaders
-- tierra procedural, estrellas y falcon heavy en la escena orbital
+- yoke, pantalla central, asientos claros y revestimiento interior
+- tierra procedural, estrellas y una escena especulativa de propulsión
 - cámaras continuas, exploración táctil, navegación y línea de tiempo
 - sonido ambiental opcional, movimiento reducido y pausa al ocultar la pestaña
 - tipografías locales; ningún recurso remoto necesario durante la reproducción
@@ -21,7 +23,9 @@ estudio tridimensional de forma, flujo y vuelo. una secuencia continua de 56 seg
 
 ## controles
 
-arrastra para orbitar. selecciona un capítulo o arrastra la línea de tiempo para buscar un instante. espacio pausa o reproduce; las flechas y la rueda cambian de capítulo. el sonido comienza únicamente al activarlo.
+arrastra para orbitar. selecciona un capítulo o arrastra la línea de tiempo para buscar un instante. el botón `puertas` abre o cierra ambos paneles. espacio pausa o reproduce; las flechas y la rueda cambian de capítulo. el sonido comienza únicamente al activarlo.
+
+![habitáculo reconstruido](public/assets/roadster-cabin.jpg)
 
 ## desarrollo
 
@@ -39,14 +43,14 @@ npm run build
 
 ## fuentes
 
-- [tesla roadster](https://www.tesla.com/es_es/roadster)
-- [manual del propietario roadster 2.5](https://service.tesla.com/docs/Public/Roadster/Owner/Roadster_2.5_Owners_Manual.pdf)
-- [manual de servicio roadster](https://service.tesla.com/docs/Public/Roadster/ServiceManual/en-us/GUID-4E037ADB-D0F4-48A0-9261-1083193D4C1B.html)
-- [falcon heavy](https://www.spacex.com/vehicles/falcon-heavy/)
-- [falcon user's guide](https://www.spacex.com/assets/media/falcon-users-guide-2025-05-09.pdf)
+- cuatro imágenes de referencia aportadas por el usuario: frontal con puertas abiertas, tres cuartos trasero, trasera e interior
+- [vídeo de referencia proporcionado](https://www.youtube.com/shorts/oCvC70oIS5w)
+- [tesla roadster oficial](https://www.tesla.com/roadster)
 
 three.js, gsap y vite. la geometría, las cámaras y los shaders se evalúan desde un tiempo absoluto, permitiendo saltar entre instantes sin acumular simulación.
 
-proyecto independiente no afiliado a tesla ni spacex. las medidas citadas son referencias públicas; la carrocería es interpretativa y no un cad de fabricación. el flujo es cualitativo, no cfd. la escena orbital es una reconstrucción artística y sus objetos no comparten una escala física. el manual 2.5 documenta la referencia dimensional; no implica que el automóvil de la misión fuera esa variante.
+proyecto independiente no afiliado a tesla ni spacex. no se ha confirmado que el diseño de las referencias sea oficial. la geometría es una interpretación visual, no un cad de fabricación.
+
+las proporciones se normalizan a la longitud de la carrocería (`l`): longitud `1.000 l`, batalla `0.600 l`, ancho `0.440 l` y altura con puertas cerradas `0.262 l`. son estimaciones del modelo, no dimensiones físicas certificadas. no se reutilizan las cotas del roadster de primera generación para esta carrocería. el flujo es cualitativo, no cfd; la propulsión y la escena espacial son especulativas, no una recreación de la misión de 2018.
 
 las fuentes barlow condensed, ibm plex mono y manrope se distribuyen con sus licencias sil open font license en `public/fonts`.
