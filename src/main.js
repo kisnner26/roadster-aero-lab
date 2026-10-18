@@ -1,7 +1,10 @@
 import './styles.css'
+import './driving.css'
 import * as THREE from 'three'
 import { gsap } from 'gsap'
 import { createRoadster, referenceEnvelope } from './roadster.js'
+import { createVehicleAudio } from './vehicle-audio.js'
+import { createDrivingMode } from './driving.js'
 
 const $ = selector => document.querySelector(selector)
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
@@ -17,6 +20,13 @@ try {
 if (renderer) init()
 
 function init() {
+  let driving=null,resumeStudio=false
+  const audio=createVehicleAudio(enabled=>{
+    $('#sound').setAttribute('aria-pressed',String(enabled))
+    $('#sound').setAttribute('aria-label',enabled?'silenciar sonido ambiental':'activar sonido ambiental')
+    $('#sound-icon').setAttribute('d',enabled?'M4 10h4l5-4v12l-5-4H4zM17 8q5 4 0 8M20 5q8 7 0 14':'M4 10h4l5-4v12l-5-4H4zM17 9l5 6M22 9l-5 6')
+    $('#drive-sound').setAttribute('aria-pressed',String(enabled));$('#drive-sound').textContent=enabled?'sonido on':'sonido off'
+  })
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75))
   renderer.setClearColor(0x080a0c)
   renderer.toneMapping = THREE.ACESFilmicToneMapping
@@ -118,7 +128,7 @@ function init() {
     [8,[-5.1,2.1,7.4],[-.2,.7,0]],
     [12,[-4.4,1.9,7.3],[-.2,.55,0]],
     [17,[.1,2.3,8.5],[-.1,.45,0]],
-    [23,[.2,5.7,5.5],[-.1,.4,0]],
+    [23,[.2,8.4,2.4],[-.1,.4,0]],
     [28,[-4.8,2.8,7.3],[-.1,.5,0]],
     [35,[4.7,2.1,7.3],[.3,.55,0]],
     [39,[7.4,1.3,.1],[.5,.5,0]],
@@ -146,6 +156,7 @@ function init() {
     renderer.setSize(width, height, false)
     camera.aspect = width / height
     camera.updateProjectionMatrix()
+    if(driving?.active){driving.resize();return}
     renderAt(state.time)
   }
 
@@ -191,6 +202,7 @@ function init() {
   }
 
   function renderAt(time) {
+    if(driving?.active)return
     const t=THREE.MathUtils.clamp(time,0,duration)
     const chapter=Math.min(chapters.length-1,Math.floor(t/14))
     updateChapter(chapter)
@@ -224,7 +236,7 @@ function init() {
     car.doors.forEach(({pivot,sign})=>{pivot.rotation.z=doorAmount*1.17;pivot.rotation.x=sign*doorAmount*.24;pivot.rotation.y=sign*doorAmount*.1})
     $('#doors').setAttribute('aria-pressed',String(doorAmount>.5))
     $('#doors').setAttribute('aria-label',doorAmount>.5?'cerrar puertas':'abrir puertas')
-    car.wing.position.y=flowAmount*.055
+    car.wing.position.y=-.19+flowAmount*.19
     car.root.position.y=flight*.85
     car.root.rotation.set(flight*.06,flight*-.28,flight*-.1)
     car.root.updateMatrixWorld(true)
@@ -291,22 +303,24 @@ function init() {
   document.querySelectorAll('[data-chapter]').forEach(button=>button.addEventListener('click',()=>{
     doorTween?.kill();userAzimuth=0;userElevation=0;doorOverride=null;seek([5,18,35,47,62][Number(button.dataset.chapter)])
   }))
-  $('.wordmark').addEventListener('click',event=>{event.preventDefault();doorTween?.kill();userAzimuth=0;userElevation=0;doorOverride=null;seek(0)})
+  $('.wordmark').addEventListener('click',event=>{event.preventDefault();if(driving?.active)driving.exit();doorTween?.kill();userAzimuth=0;userElevation=0;doorOverride=null;seek(0)})
   $('#doors').addEventListener('click',()=>{
+    audio.door()
     doorTween?.kill()
     const control={amount:car.doors[0].pivot.rotation.z/1.17}
     doorOverride=control.amount
     doorTween=gsap.to(control,{amount:control.amount>.5?0:1,duration:reducedMotion.matches?0:.85,ease:'power2.inOut',onUpdate:()=>{doorOverride=control.amount;renderAt(state.time)}})
   })
   addEventListener('keydown',event=>{
+    if(driving?.active)return
     if($('#sources').open || /INPUT|BUTTON|A/.test(document.activeElement.tagName))return
     if(event.code==='Space'){event.preventDefault();setPlaying(!playing)}
     if(event.key==='ArrowRight'){event.preventDefault();doorOverride=null;seek((activeChapter+1)%chapters.length*14+.1)}
     if(event.key==='ArrowLeft'){event.preventDefault();doorOverride=null;seek((activeChapter+chapters.length-1)%chapters.length*14+.1)}
   })
-  canvas.addEventListener('pointerdown',event=>{pointerDown=true;dragX=event.clientX;dragY=event.clientY;canvas.setPointerCapture(event.pointerId);$('#gesture-hint').style.opacity='0'})
+  canvas.addEventListener('pointerdown',event=>{if(driving?.active)return;pointerDown=true;dragX=event.clientX;dragY=event.clientY;canvas.setPointerCapture(event.pointerId);$('#gesture-hint').style.opacity='0'})
   canvas.addEventListener('pointermove',event=>{
-    if(!pointerDown)return
+    if(driving?.active||!pointerDown)return
     userAzimuth-=(event.clientX-dragX)*.005
     userElevation-=(event.clientY-dragY)*.003
     dragX=event.clientX;dragY=event.clientY
@@ -316,6 +330,7 @@ function init() {
   canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',endDrag)
   let wheelStamp=0
   canvas.addEventListener('wheel',event=>{
+    if(driving?.active)return
     if(Math.abs(event.deltaY)<25 || event.timeStamp-wheelStamp<1000)return
     wheelStamp=event.timeStamp;userAzimuth=0;userElevation=0
     doorOverride=null;seek(((activeChapter+(event.deltaY>0?1:chapters.length-1))%chapters.length)*14+.1)
@@ -327,7 +342,12 @@ function init() {
   $('#close-sources').addEventListener('click',()=>$('#sources').close())
   $('#sources').addEventListener('click',event=>{if(event.target===$('#sources')){const r=$('#sources').getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)$('#sources').close()}})
   $('#sources').addEventListener('close',()=>{if(wasPlaying)setPlaying(true)})
-  setupAudio()
+  $('#sound').addEventListener('click',()=>audio.toggle())
+  driving=createDrivingMode({renderer,studio:scene,car,audio,reducedMotion:reducedMotion.matches,onExit:()=>{renderAt(state.time);setPlaying(resumeStudio)}})
+  $('#drive-toggle').addEventListener('click',()=>{
+    if(driving.active){driving.exit();return}
+    resumeStudio=playing;setPlaying(false);doorTween?.kill();doorTween=null;doorOverride=null;seek(0);driving.enter()
+  })
   new ResizeObserver(resize).observe($('#experience'))
   resize()
   renderer.compile(scene,camera)
@@ -398,22 +418,4 @@ function createSpace() {
     fragmentShader:'uniform float uOpacity;varying vec3 vNormal;void main(){float rim=pow(1.-clamp(dot(vNormal,vec3(0,0,1)),0.,1.),5.);gl_FragColor=vec4(.07,.3,.65,rim*uOpacity*.65);}' }))
   atmosphere.position.copy(earth.position);root.add(atmosphere)
   return {root,earth,atmosphere,stars}
-}
-
-function setupAudio() {
-  let context,gain,enabled=false
-  $('#sound').addEventListener('click',async()=>{
-    if(!context){
-      context=new AudioContext();gain=context.createGain();gain.gain.value=0;gain.connect(context.destination)
-      for(const [frequency,volume] of [[55,.2],[82.41,.07],[110,.025]]) {
-        const oscillator=context.createOscillator(),level=context.createGain();oscillator.type='sine';oscillator.frequency.value=frequency;level.gain.value=volume;oscillator.connect(level);level.connect(gain);oscillator.start()
-      }
-    }
-    await context.resume();enabled=!enabled
-    gain.gain.setTargetAtTime(enabled?.18:0,context.currentTime,.4)
-    $('#sound').setAttribute('aria-pressed',String(enabled))
-    $('#sound').setAttribute('aria-label',enabled?'silenciar sonido ambiental':'activar sonido ambiental')
-    $('#sound-icon').setAttribute('d',enabled?'M4 10h4l5-4v12l-5-4H4zM17 8q5 4 0 8M20 5q8 7 0 14':'M4 10h4l5-4v12l-5-4H4zM17 9l5 6M22 9l-5 6')
-  })
-  document.addEventListener('visibilitychange',()=>{if(context)gain.gain.setTargetAtTime(document.hidden?0:enabled?.18:0,context.currentTime,.2)})
 }
