@@ -37,6 +37,7 @@ los formatos anteriores se conservan en el historial. las licencias no cambian. 
 npm run check
 npm test
 npm run build
+npm run check:build
 npm run benchmark:track
 ```
 
@@ -46,6 +47,14 @@ el canvas `#viewport` publica `data-draw-calls`, `data-triangles`, `data-render-
 
 la revisión manual debe incluir: estudio pausado y en reproducción; flujo y malla técnica; entrada y salida de conducción; primera/tercera persona; aceleración y salto; clics y teclado dentro del monitor; cambio de perfil; reproducción real de youtube; escala del asfalto y ausencia de errores de consola.
 
+## caché y presupuestos del build
+
+vite separa la aplicación, three.js, gsap y los addons exclusivos del circuito. el código propio ocupa aproximadamente 86.7 kb sin comprimir; three.js, 564.6 kb, y gsap, 70 kb. los addons de conducción permanecen diferidos junto al mundo. una modificación del código propio no cambia por sí sola los archivos de bibliotecas que no dependen de él. el aprovechamiento de esa separación depende de la caché del navegador y del alojamiento.
+
+la descarga inicial combinada sigue cerca de 201.5 kb gzip: esta división mejora la reutilización de caché, no elimina el coste de una primera visita. el bloque de three.js sigue generando el aviso de 500 kb de vite.
+
+`check:build` lee el manifiesto generado y verifica límites crudos y gzip por bloque, css y javascript inicial combinado. además exige que el mundo sea una entrada dinámica y que sus addons no aparezcan en el grafo inicial. github actions ejecuta esta comprobación antes de subir el artefacto. debe ejecutarse después de `build`; los límites viven en `scripts/check-build.mjs` y no se aumentan automáticamente al crecer un archivo.
+
 ## límites pendientes
 
-three.js sigue siendo la mayor parte del javascript inicial. vite avisa del tamaño del bloque principal; no se oculta el aviso ni se atribuye la división del mundo a una reducción de toda la biblioteca. no se promete una puntuación lighthouse ni una tasa de cuadros universal. el modelo y la física continúan siendo una reconstrucción visual y una simulación de juego, no ingeniería certificada del fabricante.
+three.js sigue siendo la mayor parte del javascript inicial. no se oculta su aviso de tamaño ni se atribuye la división del mundo a una reducción de toda la biblioteca. no se promete una puntuación lighthouse ni una tasa de cuadros universal. el modelo y la física continúan siendo una reconstrucción visual y una simulación de juego, no ingeniería certificada del fabricante.

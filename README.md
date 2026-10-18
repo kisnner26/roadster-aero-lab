@@ -74,6 +74,7 @@ validación:
 npm run check
 npm test
 npm run build
+npm run check:build
 npm run benchmark:track
 ```
 
