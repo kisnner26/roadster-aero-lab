@@ -33,7 +33,9 @@ export function createStuntWorld(scene,roadMaterial,car,terrainMaterial,heightAt
   car.root.updateWorldMatrix(true,true)
   car.root.traverse(object=>{
     if(!object.isMesh||object.material===car.plumeMaterial||object.material===car.liftPlumeMaterial)return
-    const instances=new THREE.InstancedMesh(object.geometry,object.material,parkedCars.length),transform=new THREE.Matrix4(),pose=new THREE.Matrix4(),rotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.PI)
+    if(!object.visible||object.parent===car.reverseLights)return
+    const material=object.material===car.brakeLight?object.material.clone():object.material
+    const instances=new THREE.InstancedMesh(object.geometry,material,parkedCars.length),transform=new THREE.Matrix4(),pose=new THREE.Matrix4(),rotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.PI)
     parkedCars.forEach((vehicle,i)=>{pose.compose(new THREE.Vector3(vehicle.x,.03,vehicle.z),rotation,new THREE.Vector3(1,1,1));transform.multiplyMatrices(pose,object.matrixWorld);instances.setMatrixAt(i,transform)})
     instances.castShadow=true;instances.receiveShadow=true;root.add(instances)
   })

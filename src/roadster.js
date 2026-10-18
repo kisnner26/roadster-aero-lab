@@ -122,10 +122,13 @@ export function createRoadster() {
     doors.push({pivot,sign})
   }
   // rear: full-width tail light, four metal nozzles and a recessed four-channel diffuser.
+  const brakeLight=new THREE.MeshBasicMaterial({color:0xff161b,toneMapped:false})
   panel([[2.255,.725,-.91],[2.255,.725,.91],[2.255,.32,.94],[2.255,.32,-.94]],paint,shell)
   box([.04,.09,1.8],carbon,details,[2.275,.68,0])
-  box([.046,.017,1.75],redLed,details,[2.3,.699,0])
-  box([.046,.013,1.75],redLed,details,[2.3,.653,0])
+  box([.046,.017,1.75],brakeLight,details,[2.3,.699,0])
+  box([.046,.013,1.75],brakeLight,details,[2.3,.653,0])
+  const reverseLights=new THREE.Group();reverseLights.visible=false;details.add(reverseLights)
+  for(const sign of [-1,1])box([.035,.018,.1],led,reverseLights,[2.3,.53,sign*.29])
   box([.025,.145,.34],upholstery,details,[2.285,.53,0])
   box([.03,.014,.19],darkMetal,details,[2.305,.53,0])
   box([.19,.34,1.54],carbon,details,[2.23,.275,0])
@@ -228,7 +231,7 @@ export function createRoadster() {
   const sections=new THREE.Group();sections.visible=false;root.add(sections)
   const sectionMaterial=new THREE.LineBasicMaterial({color:0x85b9d2,transparent:true,opacity:0})
   for(let i=6;i<loops.length;i+=14)sections.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(loops[i].map(p=>v(...p))),sectionMaterial))
-  return {root,shell,details,wheels,wireMaterials,wireObjects,sections,exhaust,sectionMaterial,paint,glass,wheelCenters,doors,wing,plumeMaterial,liftPlumeMaterial,steering,screenTexture,screenSurface,driverScreens,seats}
+  return {root,shell,details,wheels,wireMaterials,wireObjects,sections,exhaust,brakeLight,reverseLights,sectionMaterial,paint,glass,wheelCenters,doors,wing,plumeMaterial,liftPlumeMaterial,steering,screenTexture,screenSurface,driverScreens,seats}
 }
 
 function createScreenTexture() {

@@ -3,6 +3,7 @@ import {createVehicleState,stepVehicle,stepVertical,vehicleConfig,augments} from
 import {screenFocusFov} from './cockpit-screen.js'
 import {stepExhibitionLoop,stuntLoop} from './stunt-physics.js'
 import {createCircuit} from './circuit.js'
+import {vehicleVisualTargets} from './vehicle-visuals.js'
 
 const $=selector=>document.querySelector(selector)
 const heldKeys=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','ShiftLeft','ShiftRight','KeyX','KeyI','KeyK','KeyJ','KeyL'])
@@ -71,7 +72,11 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
     if(car.seats){car.seats[0].visible=state.augment!=='rocket';car.seats[1].visible=true}
     car.wheelCenters.forEach(wheel=>{wheel.rotation.y=wheel.position.x<0?-state.steer:0;wheel.rotation.z=state.distance/vehicleConfig.wheelRadius})
     if(car.steering)car.steering.rotation.x=-state.steer*7
-    car.wing.position.y=-.19+Math.min(.19,Math.abs(state.speed)/60*.19)+state.brake*.055
+    const visual=vehicleVisualTargets(state),response=dt?1-Math.exp(-dt*9):1
+    car.wing.position.y=THREE.MathUtils.lerp(car.wing.position.y,visual.wingHeight,response)
+    car.wing.rotation.z=THREE.MathUtils.lerp(car.wing.rotation.z,visual.wingPitch,response)
+    car.brakeLight.color.set(0xff161b).multiplyScalar(visual.brakeLight)
+    car.reverseLights.visible=visual.reverse
     car.root.updateMatrixWorld(true)
     const mobile=camera.aspect<.85
     if(screenFocus){desiredCamera.set(.24,.80,0);desiredTarget.set(-.349,.795,0)}
@@ -143,6 +148,7 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
   function exit() {
     if(!active)return
     active=false;cancelAnimationFrame(raf);clearInput();audio.setDriving(false)
+    car.wing.rotation.z=0;car.brakeLight.color.set(0xff161b);car.reverseLights.visible=false
     studio.add(car.root);car.root.position.set(0,0,0);car.root.rotation.set(0,0,0);car.wheelCenters.forEach(wheel=>wheel.rotation.set(0,0,0));if(car.steering)car.steering.rotation.set(0,0,0);car.seats?.forEach(seat=>seat.visible=true);if(car.liftPlumeMaterial)car.liftPlumeMaterial.uniforms.uOpacity.value=0
     $('#experience').dataset.mode='studio';$('#drive-hud').hidden=true;$('#drive-toggle').setAttribute('aria-pressed','false');$('#drive-toggle').setAttribute('aria-label','iniciar conducción en pov');$('#drive-toggle').textContent='conducir ↗'
     $('#viewport').removeAttribute('tabindex');$('#viewport').removeAttribute('aria-describedby');$('#drive-toggle').focus()
