@@ -5,8 +5,8 @@ const paint=new THREE.MeshPhysicalMaterial({color:0xeceae3,metalness:.38,roughne
 const carbon=new THREE.MeshStandardMaterial({color:0x080b0f,metalness:.3,roughness:.38,side:THREE.DoubleSide})
 const rubber=new THREE.MeshStandardMaterial({color:0x0e1013,roughness:.9})
 const alloy=new THREE.MeshStandardMaterial({color:0xd7dadd,metalness:.68,roughness:.26,envMapIntensity:1.1})
-const glass=new THREE.MeshPhysicalMaterial({color:0x8a6a2c,metalness:.45,roughness:.07,clearcoat:1,envMapIntensity:1.3,side:THREE.FrontSide,transparent:true,opacity:.82,depthWrite:false})
-const titanium=new THREE.MeshStandardMaterial({color:0x6a7077,metalness:.75,roughness:.3})
+const glass=new THREE.MeshPhysicalMaterial({color:0x30230f,metalness:.55,roughness:.06,clearcoat:1,envMapIntensity:1.5,side:THREE.FrontSide,transparent:true,opacity:.9,depthWrite:false})
+const titanium=new THREE.MeshStandardMaterial({color:0x6a7077,metalness:.75,roughness:.3,side:THREE.DoubleSide})
 const upholstery=new THREE.MeshStandardMaterial({color:0xcbd1d5,roughness:.75,side:THREE.DoubleSide})
 const led=new THREE.MeshBasicMaterial({color:0xd2ebff})
 const redLed=new THREE.MeshBasicMaterial({color:0xff161b})
@@ -60,8 +60,8 @@ export function createRoadster({createCanvas=()=>document.createElement('canvas'
   ]
   const longitudinal=new THREE.CatmullRomCurve3(profiles.map(p=>v(...p)),false,'catmullrom',.2)
   const loops=[]
-  for(let i=0;i<=220;i++) {
-    const p=longitudinal.getPoint(i/220),x=p.x,w=p.y,h=p.z
+  for(let i=0;i<=480;i++) {
+    const p=longitudinal.getPoint(i/480),x=p.x,w=p.y,h=p.z
     const fender=Math.exp(-Math.pow((x+1.34)/.5,4))*.10+Math.exp(-Math.pow((x-1.36)/.55,4))*.065
     loops.push([[x,h,0],[x,h-.025+fender*.7,w*.72],[x,h-.05+fender,w],[x,.37,w],[x,.22,w*.91],[x,.19,0],[x,.22,-w*.91],[x,.37,-w],[x,h-.05+fender,-w],[x,h-.025+fender*.7,-w*.72],[x,h,0]])
   }
@@ -70,7 +70,7 @@ export function createRoadster({createCanvas=()=>document.createElement('canvas'
   const inCockpit=([x,y,z])=>x>-.73&&x<.9&&Math.abs(z)<.8&&y>.55
   // separate strips preserve the folded metal creases rather than smoothing every edge.
   for(let edge=0;edge<10;edge++) {
-    const positions=[],indices=[],steps=10
+    const positions=[],indices=[],steps=24
     for(let i=0;i<loops.length;i++)for(let j=0;j<=steps;j++){
       const a=loops[i][edge],b=loops[i][edge+1],t=j/steps
       positions.push(a[0],a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t)
@@ -158,6 +158,7 @@ export function createRoadster({createCanvas=()=>document.createElement('canvas'
     {const plume=mesh(plumeGeometry(1.2),liftPlumeMaterial,exhaust,[x,.2,z]);plume.rotation.z=Math.PI;plume.castShadow=false}
   }
   for(const sign of [-1,1]){const nozzle=mesh(new THREE.TorusGeometry(.035,.005,8,24),darkMetal,details,[.9,.52,sign*.957]);if(sign<0)nozzle.rotation.y=Math.PI}
+  for(const sign of [-1,1])for(const x of [-.7,.93]){const pod=mesh(new THREE.CylinderGeometry(.022,.03,.07,16),darkMetal,details,[x,.2,sign*.95]);mesh(new THREE.CircleGeometry(.017,16),carbon,details,[x,.163,sign*.95]).rotation.x=Math.PI/2;pod.castShadow=false}
   // active aero: a high, narrow wing with vertical endplates.
   const wing=new THREE.Group();root.add(wing)
   for(const sign of [-1,1]) {
@@ -210,13 +211,9 @@ export function createRoadster({createCanvas=()=>document.createElement('canvas'
     cylinder(.252,.018,carbon,wheel,[0,0,sign*.12])
     cylinder(.204,.014,darkMetal,wheel,[0,0,sign*.13])
     const rim=mesh(new THREE.TorusGeometry(.272,.012,10,72),titanium,wheel,[0,0,sign*.137]);rim.scale.z=.6
-    for(let i=0;i<5;i++) {
-      const a=i/5*Math.PI*2,transform=([px,py])=>[Math.cos(a)*px-Math.sin(a)*py,Math.sin(a)*px+Math.cos(a)*py,sign*.148]
-      panel([[.035,-.025],[.115,-.06],[.265,.035],[.245,.10],[.085,.065]].map(transform),titanium,wheel)
-      for(let j=0;j<3;j++) {
-        const b=a+j*.16
-        const dot=mesh(new THREE.CircleGeometry(.006,6),carbon,wheel,[Math.cos(b)*.19,Math.sin(b)*.19,sign*.141]);if(sign<0)dot.rotation.y=Math.PI
-      }
+    for(let i=0;i<10;i++) {
+      const a=i/10*Math.PI*2,transform=([px,py])=>[Math.cos(a)*px-Math.sin(a)*py,Math.sin(a)*px+Math.cos(a)*py,sign*.148]
+      panel([[.045,-.012],[.14,-.034],[.268,-.016],[.268,.012],[.14,-.004],[.045,.016]].map(transform),titanium,wheel)
     }
     cylinder(.048,.025,alloy,wheel,[0,0,sign*.158])
     box([.07,.14,.045],darkMetal,wheel,[.15,0,sign*.134])
