@@ -22,3 +22,8 @@ test('las consultas repetidas reutilizan el resultado sin alterar puntos',()=>{
   assert.equal(query(100000,-100000).index>=0,true)
   assert.throws(()=>createTrackQuery([],[]))
 })
+test('los empates conservan el primer índice del trazado',()=>{
+  const tied=createTrackQuery([{x:-1,z:0},{x:99,z:99},{x:1,z:0}],[null,null,null])
+  assert.equal(tied(0,0).index,0)
+  assert.throws(()=>createTrackQuery(points,normals,{stride:.5}))
+})
