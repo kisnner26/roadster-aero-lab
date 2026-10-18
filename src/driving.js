@@ -19,7 +19,7 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
   const previousCarPosition=new THREE.Vector3(),cameraTranslation=new THREE.Vector3()
   let active=false,paused=false,exterior=false,raf=0,last=0,accumulator=0,state=createVehicleState(),lap=1,lastProgress=0,lapTime=0,dashTimer=0,viewReady=false
   let headYaw=0,headPitch=0,dragging=false,dragX=0,dragY=0,hasDriven=false,screenFocus=false,previousExterior=false,area='circuit',notice=''
-  let lastControls=''
+  let lastControls='',entryVersion=0
   $('#drive-map-track').setAttribute('d',createCircuit().mapPath)
 
   function clearInput() {
@@ -140,12 +140,13 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
     audio.update(state);draw(dt);raf=requestAnimationFrame(tick)
   }
   async function enter() {
+    const version=++entryVersion
     if(!world){
       const {createDrivingWorld}=await import('./driving-world.js')
       world=createDrivingWorld(worldScene,car)
       $('#drive-map-track').setAttribute('d',world.mapPath)
     }
-    active=true;paused=false;exterior=false;screenFocus=false;last=0;accumulator=0
+    active=true;paused=document.hidden;exterior=false;screenFocus=false;last=0;accumulator=0
     worldScene.add(car.root);car.doors.forEach(({pivot})=>pivot.rotation.set(0,0,0));car.wireMaterials.forEach(material=>material.opacity=0);car.sectionMaterial.opacity=0;car.plumeMaterial.uniforms.uOpacity.value=0
     car.sections.visible=false;car.wireObjects.forEach(object=>object.visible=false)
     $('#experience').dataset.mode='drive';$('#drive-hud').hidden=false
@@ -153,18 +154,20 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
     $('#viewport').setAttribute('tabindex','0');$('#viewport').setAttribute('aria-describedby','drive-instructions');$('#viewport').focus({preventScroll:true})
     renderer.setClearColor(0xa4b5bd);renderer.toneMappingExposure=.95
     resize();reset();audio.setDriving(true)
-    try{if(!hasDriven)await audio.setEnabled(true)}catch{$('#drive-message').textContent='pulsa sonido para activar el audio'}
+    try{if(!hasDriven)await audio.setEnabled(true)}catch{if(active&&version===entryVersion)$('#drive-message').textContent='pulsa sonido para activar el audio'}
+    if(!active||version!==entryVersion)return
     hasDriven=true
-    $('#drive-pause').setAttribute('aria-pressed','false');$('#drive-pause').textContent='pausa'
-    raf=requestAnimationFrame(tick)
+    $('#drive-pause').setAttribute('aria-pressed',String(paused));$('#drive-pause').textContent=paused?'continuar':'pausa'
+    cancelAnimationFrame(raf)
+    if(!paused&&!document.hidden)raf=requestAnimationFrame(tick)
   }
   function exit() {
     if(!active)return
-    active=false;cancelAnimationFrame(raf);clearInput();audio.setDriving(false)
+    active=false;entryVersion++;cancelAnimationFrame(raf);clearInput();audio.setDriving(false)
     car.wing.rotation.z=0;car.brakeLight.color.set(0xff161b);car.reverseLights.visible=false
     studio.add(car.root);car.root.position.set(0,0,0);car.root.rotation.set(0,0,0);car.wheelCenters.forEach(wheel=>wheel.rotation.set(0,0,0));if(car.steering)car.steering.rotation.set(0,0,0);car.seats?.forEach(seat=>seat.visible=true);if(car.liftPlumeMaterial)car.liftPlumeMaterial.uniforms.uOpacity.value=0
     $('#experience').dataset.mode='studio';$('#drive-hud').hidden=true;$('#drive-toggle').setAttribute('aria-pressed','false');$('#drive-toggle').setAttribute('aria-label','iniciar conducción en pov');$('#drive-toggle').textContent='conducir ↗'
-    $('#viewport').removeAttribute('tabindex');$('#viewport').removeAttribute('aria-describedby');$('#drive-toggle').focus()
+    $('#viewport').removeAttribute('tabindex');$('#viewport').removeAttribute('aria-describedby');$('#drive-toggle').focus({preventScroll:true})
     renderer.setClearColor(0x080a0c);renderer.toneMappingExposure=1.15;onExit()
   }
   function keydown(event) {
