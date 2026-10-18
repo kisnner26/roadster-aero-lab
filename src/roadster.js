@@ -5,7 +5,7 @@ const paint=new THREE.MeshPhysicalMaterial({color:0xeceae3,metalness:.38,roughne
 const carbon=new THREE.MeshStandardMaterial({color:0x080b0f,metalness:.3,roughness:.38,side:THREE.DoubleSide})
 const rubber=new THREE.MeshStandardMaterial({color:0x0e1013,roughness:.9})
 const alloy=new THREE.MeshStandardMaterial({color:0xd7dadd,metalness:.68,roughness:.26,envMapIntensity:1.1})
-const glass=new THREE.MeshPhysicalMaterial({color:0x30230f,metalness:.55,roughness:.06,clearcoat:1,envMapIntensity:1.5,side:THREE.FrontSide,transparent:true,opacity:.9,depthWrite:false})
+const glass=new THREE.MeshPhysicalMaterial({color:0x3a2a14,metalness:.55,roughness:.06,clearcoat:1,envMapIntensity:1.5,side:THREE.FrontSide,transparent:true,opacity:.9,depthWrite:false})
 const titanium=new THREE.MeshStandardMaterial({color:0x6a7077,metalness:.75,roughness:.3,side:THREE.DoubleSide})
 const spokeDark=new THREE.MeshStandardMaterial({color:0x15181c,metalness:.7,roughness:.32,side:THREE.DoubleSide})
 const discLight=new THREE.MeshStandardMaterial({color:0xc9ccd0,metalness:.6,roughness:.34})
@@ -37,7 +37,7 @@ function cylinder(radius,length,material,parent,position) {
   return object
 }
 function canopy(parent) {
-  const curve=new THREE.CatmullRomCurve3([[-.94,.735,.68],[-.33,1.155,.6],[.06,1.18,.58],[.56,1.175,.56],[1.49,.8,.68]].map(p=>v(...p)),false,'catmullrom',.15)
+  const curve=new THREE.CatmullRomCurve3([[-1.18,.715,.7],[-.6,.98,.64],[-.12,1.15,.6],[.3,1.18,.58],[.56,1.175,.56],[1.49,.8,.68]].map(p=>v(...p)),false,'catmullrom',.15)
   const positions=[],indices=[],cols=24,rows=90
   for(let i=0;i<=rows;i++){
     const p=curve.getPoint(i/rows)
@@ -56,16 +56,17 @@ export function createRoadster({createCanvas=()=>document.createElement('canvas'
   root.add(shell,details,wheels)
   const wheelX=[-1.34,1.36],wheelRadius=.355
   const profiles=[
-    [-2.25,.81,.51],[-2.12,.91,.55],[-1.7,.96,.65],[-1.34,.985,.71],
-    [-.86,.94,.72],[-.25,.90,.71],[.45,.92,.73],[1.01,.98,.77],
-    [1.36,1.0,.79],[1.9,.94,.77],[2.25,.86,.74],
+    [-2.25,.80,.45],[-2.12,.90,.50],[-1.7,.96,.60],[-1.34,.985,.68],
+    [-.86,.94,.72],[-.25,.90,.72],[.45,.92,.75],[1.01,.98,.80],
+    [1.36,1.0,.83],[1.9,.95,.84],[2.25,.86,.77],
   ]
   const longitudinal=new THREE.CatmullRomCurve3(profiles.map(p=>v(...p)),false,'catmullrom',.2)
   const loops=[]
   for(let i=0;i<=480;i++) {
     const p=longitudinal.getPoint(i/480),x=p.x,w=p.y,h=p.z
     const fender=Math.exp(-Math.pow((x+1.34)/.5,4))*.10+Math.exp(-Math.pow((x-1.36)/.55,4))*.065
-    loops.push([[x,h,0],[x,h-.025+fender*.7,w*.72],[x,h-.05+fender,w],[x,.37,w],[x,.22,w*.91],[x,.19,0],[x,.22,-w*.91],[x,.37,-w],[x,h-.05+fender,-w],[x,h-.025+fender*.7,-w*.72],[x,h,0]])
+    const drop=.05+.07*Math.min(1,Math.max(0,(x+2.1)/.9))
+    loops.push([[x,h,0],[x,h-.012+fender*.4,w*.66],[x,h-drop+fender,w],[x,.37,w],[x,.22,w*.91],[x,.19,0],[x,.22,-w*.91],[x,.37,-w],[x,h-.05+fender,-w],[x,h-.025+fender*.7,-w*.72],[x,h,0]])
   }
   const inArch=([x,y,z])=>Math.abs(z)>.71&&Math.min(...wheelX.map(cx=>(x-cx)**2))+(y-wheelRadius)**2<.375**2
   const inDoor=([x,y,z])=>x>-.75&&x<.88&&Math.abs(z)>.71&&y>.24
@@ -93,9 +94,11 @@ export function createRoadster({createCanvas=()=>document.createElement('canvas'
   panel([[-2.30,.23,-.91],[-2.30,.23,.91],[-2.1,.21,.96],[-2.1,.21,-.96]],carbon,details)
   for(const sign of [-1,1]) {
     line([[-2.12,.555,sign*.69],[-1.62,.666,sign*.61],[-.86,.723,sign*.65]],.0035,carbon,details)
-    line([[-.77,.25,sign*.91],[.1,.225,sign*.94],[.95,.26,sign*.99]],.018,carbon,details)
-    const mirror=mesh(new THREE.SphereGeometry(1,24,12),carbon,details,[-.65,.79,sign*1.025]);mirror.scale.set(.105,.035,.049)
-    line([[-.64,.75,sign*.87],[-.65,.78,sign*1.01]],.009,carbon,details)
+    box([1.74,.1,.05],carbon,details,[.1,.245,sign*.955])
+    line([[-1.3,.69,sign*.99],[-.4,.72,sign*.975],[.9,.77,sign*.965],[1.9,.83,sign*.92]],.003,carbon,details)
+    line([[-2.2,.5,sign*.8],[-1.6,.62,sign*.7],[-1.2,.7,sign*.66]],.004,carbon,details)
+    const mirror=mesh(new THREE.SphereGeometry(1,24,12),carbon,details,[-.7,.8,sign*1.025]);mirror.scale.set(.105,.035,.049)
+    line([[-.7,.76,sign*.9],[-.7,.79,sign*1.01]],.009,carbon,details)
     for(const x of wheelX) {
       const points=Array.from({length:49},(_,i)=>{const a=i/48*Math.PI;return[x+Math.cos(a)*.383,wheelRadius+Math.sin(a)*.383,sign*(x<0?.984:1.002)]})
       line(points,.009,paint,shell)
@@ -105,11 +108,11 @@ export function createRoadster({createCanvas=()=>document.createElement('canvas'
   canopy(details)
   panel([[-.25,1.13,-.55],[-.25,1.13,.55],[.58,1.14,.54],[.58,1.14,-.54]],headliner,details)
   for(const sign of [-1,1]) {
-    line([[-.94,.7,sign*.68],[-.33,1.12,sign*.6],[.06,1.145,sign*.58],[.56,1.14,sign*.56],[1.49,.765,sign*.68]],.012,paint,shell)
+    line([[-1.18,.69,sign*.7],[-.6,.955,sign*.64],[-.12,1.12,sign*.6],[.3,1.15,sign*.58],[.56,1.14,sign*.56],[1.49,.765,sign*.68]],.012,paint,shell)
     panel([[.83,.75,sign*.91],[1.52,.78,sign*.83],[.58,1.14,sign*.56]],paint,shell)
     line([[.65,1.13,sign*.59],[1.52,.79,sign*.7]],.006,carbon,details)
   }
-  line([[-.86,.73,-.65],[-.91,.75,0],[-.86,.73,.65]],.012,carbon,details)
+  line([[-1.2,.7,-.69],[-1.24,.715,0],[-1.2,.7,.69]],.012,carbon,details)
   // doors pivot at the leading edge; glazing, inner trim and outer skin move as one assembly.
   const doors=[]
   for(const sign of [-1,1]) {
@@ -118,8 +121,8 @@ export function createRoadster({createCanvas=()=>document.createElement('canvas'
     const outerDoor=local([[-.75,.68,sign*.945],[.88,.72,sign*.965],[.88,.31,sign*.93],[-.75,.27,sign*.91]])
     panel(sign>0?outerDoor.reverse():outerDoor,paint,pivot)
     panel(local([[-.72,.65,sign*.91],[.86,.69,sign*.93],[.86,.35,sign*.905],[-.72,.31,sign*.875]]),carbon,pivot)
-    panel(local([[-.73,.725,sign*.91],[-.23,1.144,sign*.585],[.56,1.153,sign*.565],[.88,.78,sign*.94]]).reverse(),glass,pivot)
-    line(local([[-.73,.725,sign*.91],[-.23,1.144,sign*.585],[.56,1.153,sign*.565],[.88,.78,sign*.94]]),.009,carbon,pivot)
+    panel(local([[-.73,.74,sign*.91],[-.6,.98,sign*.64],[-.12,1.15,sign*.6],[.56,1.155,sign*.565],[.88,.78,sign*.94]]).reverse(),glass,pivot)
+    line(local([[-.73,.74,sign*.91],[-.6,.98,sign*.64],[-.12,1.15,sign*.6],[.56,1.155,sign*.565],[.88,.78,sign*.94]]),.009,carbon,pivot)
     line(local([[-.72,.67,sign*.925],[.8,.69,sign*.945]]),.004,redLed,pivot)
     panel(local([[-.65,.52,sign*.90],[.63,.54,sign*.92],[.73,.59,sign*.92],[-.51,.59,sign*.90]]),upholstery,pivot)
     box([.14,.013,.012],carbon,pivot,local([[.68,.68,sign*.971]])[0])
