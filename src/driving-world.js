@@ -3,6 +3,7 @@ import {HDRLoader} from 'three/addons/loaders/HDRLoader.js'
 import {createStuntWorld} from './stunt-world.js'
 import {inStuntArea,stuntSurface,collideStuntVehicles} from './stunt-physics.js'
 import {createTrackQuery} from './track-query.js'
+import {createCircuit} from './circuit.js'
 
 const seeded=i=>{const n=Math.sin(i*127.1+83.17)*43758.5453;return n-Math.floor(n)}
 
@@ -37,12 +38,7 @@ function foliageTexture() {
 export function createDrivingWorld(scene,car) {
   scene.background=new THREE.Color(0xa4b5bd)
   scene.fog=new THREE.FogExp2(0xa4b5bd,.00145)
-  const curve=new THREE.CatmullRomCurve3([[-235,0,-110],[-115,0,-205],[115,0,-185],[255,0,-65],[220,0,115],[65,0,210],[-145,0,155],[-270,0,25]].map(p=>new THREE.Vector3(...p)),true,'catmullrom',.35)
-  const points=curve.getSpacedPoints(1100),length=curve.getLength(),normals=[]
-  for(let i=0;i<points.length;i++){
-    const tangent=curve.getTangentAt(i/(points.length-1))
-    normals.push(new THREE.Vector3(-tangent.z,0,tangent.x).normalize())
-  }
+  const {curve,points,length,normals,mapPath}=createCircuit()
   const terrainGeometry=new THREE.PlaneGeometry(2400,2400,140,140);terrainGeometry.rotateX(-Math.PI/2)
   function heightAt(x,z) {
     if(inStuntArea(x,z))return -.09
@@ -135,7 +131,6 @@ export function createDrivingWorld(scene,car) {
   new HDRLoader().load(assetUrl('sky.hdr'),texture=>{texture.mapping=THREE.EquirectangularReflectionMapping;scene.background=texture;scene.environment=texture;scene.backgroundIntensity=.8;scene.environmentIntensity=.65;sky.visible=false},undefined,()=>{sky.visible=true})
   scene.add(new THREE.HemisphereLight(0xc6dcf1,0x646047,2.2))
   const sun=new THREE.DirectionalLight(0xffe1b1,3.2);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-26;sun.shadow.camera.right=26;sun.shadow.camera.top=26;sun.shadow.camera.bottom=-26;sun.shadow.camera.near=.5;sun.shadow.camera.far=140;sun.shadow.normalBias=.035;scene.add(sun,sun.target)
-  const mapPath=points.filter((_,i)=>i%8===0).map((p,i)=>`${i?'L':'M'}${(p.x+300)/600*160},${(p.z+240)/480*118}`).join(' ')+'Z'
   return {curve,points,normals,length,nearest,sun,mapPath,heightAt,surface(x,z,heading){if(inStuntArea(x,z))return stuntSurface(x,z,heading);const near=nearest(x,z);return {height:near.distance<7.4?.028:near.distance<9?-.008:heightAt(x,z)+.006,slope:0}},update(x,z){const h=heightAt(x,z);sun.position.set(x-35,h+70,z-30);sun.target.position.set(x,h,z);sky.position.set(x,0,z)},collision(state){
     if(inStuntArea(state.x,state.z)){collideStuntVehicles(state);return}
     if(state.y>2)return

@@ -1,22 +1,22 @@
 import * as THREE from 'three'
-import {createDrivingWorld} from './driving-world.js'
 import {createVehicleState,stepVehicle,stepVertical,vehicleConfig,augments} from './vehicle-physics.js'
 import {screenFocusFov} from './cockpit-screen.js'
 import {stepExhibitionLoop,stuntLoop} from './stunt-physics.js'
+import {createCircuit} from './circuit.js'
 
 const $=selector=>document.querySelector(selector)
 const heldKeys=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','ShiftLeft','ShiftRight','KeyX','KeyI','KeyK','KeyJ','KeyL'])
 
 export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>{},onDashboard=()=>{},onSceneRender=()=>{},isScreenOpen=()=>false,reducedMotion=false}) {
   const worldScene=new THREE.Scene();worldScene.environment=studio.environment
-  const world=createDrivingWorld(worldScene,car)
+  let world=null
   const camera=new THREE.PerspectiveCamera(74,1,.025,6000)
   const keys=new Set(),touch={throttle:0,brake:0,left:0,right:0}
   const cameraPosition=new THREE.Vector3(),lookAt=new THREE.Vector3(),desiredCamera=new THREE.Vector3(),desiredTarget=new THREE.Vector3()
   let active=false,paused=false,exterior=false,raf=0,last=0,accumulator=0,state=createVehicleState(),lap=1,lastProgress=0,lapTime=0,dashTimer=0,viewReady=false
   let headYaw=0,headPitch=0,dragging=false,dragX=0,dragY=0,hasDriven=false,screenFocus=false,previousExterior=false,area='circuit',notice=''
   let lastControls=''
-  $('#drive-map-track').setAttribute('d',world.mapPath)
+  $('#drive-map-track').setAttribute('d',createCircuit().mapPath)
 
   function clearInput() {
     keys.clear();Object.keys(touch).forEach(key=>touch[key]=0)
@@ -122,6 +122,11 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
     audio.update(state);draw(dt);raf=requestAnimationFrame(tick)
   }
   async function enter() {
+    if(!world){
+      const {createDrivingWorld}=await import('./driving-world.js')
+      world=createDrivingWorld(worldScene,car)
+      $('#drive-map-track').setAttribute('d',world.mapPath)
+    }
     active=true;paused=false;exterior=false;screenFocus=false;last=0;accumulator=0
     worldScene.add(car.root);car.doors.forEach(({pivot})=>pivot.rotation.set(0,0,0));car.wireMaterials.forEach(material=>material.opacity=0);car.sectionMaterial.opacity=0;car.plumeMaterial.uniforms.uOpacity.value=0
     car.sections.visible=false;car.wireObjects.forEach(object=>object.visible=false)

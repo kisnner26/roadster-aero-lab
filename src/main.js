@@ -387,9 +387,14 @@ function init() {
     screenRay.setFromCamera(screenPointer,driving.active?driving.camera:camera)
     if(screenRay.intersectObject(car.screenSurface).length)infotainment.open()
   })
-  $('#drive-toggle').addEventListener('click',()=>{
+  $('#drive-toggle').addEventListener('click',async()=>{
     if(driving.active){driving.exit();return}
-    resumeStudio=playing;setPlaying(false);doorTween?.kill();doorTween=null;doorOverride=null;seek(0);driving.enter()
+    const button=$('#drive-toggle');button.disabled=true;button.setAttribute('aria-busy','true');button.textContent='preparando circuito'
+    $('#fallback').hidden=true
+    resumeStudio=playing;setPlaying(false);doorTween?.kill();doorTween=null;doorOverride=null;seek(0)
+    try{await driving.enter()}
+    catch{button.textContent='conducir ↗';$('#fallback').textContent='no se pudo preparar el circuito. comprueba la conexión y pulsa conducir para reintentar.';$('#fallback').hidden=false;setPlaying(resumeStudio)}
+    finally{button.disabled=false;button.removeAttribute('aria-busy')}
   })
   new ResizeObserver(resize).observe($('#experience'))
   resize()
