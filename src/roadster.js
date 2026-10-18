@@ -5,7 +5,7 @@ const paint=new THREE.MeshPhysicalMaterial({color:0xd6d9db,metalness:.62,roughne
 const carbon=new THREE.MeshStandardMaterial({color:0x080b0f,metalness:.3,roughness:.38,side:THREE.DoubleSide})
 const rubber=new THREE.MeshStandardMaterial({color:0x0e1013,roughness:.9})
 const alloy=new THREE.MeshStandardMaterial({color:0xd7dadd,metalness:.68,roughness:.26,envMapIntensity:1.1})
-const glass=new THREE.MeshPhysicalMaterial({color:0x493d2d,metalness:.12,roughness:.08,clearcoat:1,envMapIntensity:.9,side:THREE.FrontSide,transparent:true,opacity:.66,depthWrite:false})
+const glass=new THREE.MeshPhysicalMaterial({color:0x493d2d,metalness:.12,roughness:.08,clearcoat:1,envMapIntensity:.9,side:THREE.FrontSide,transparent:true,opacity:.84,depthWrite:false})
 const upholstery=new THREE.MeshStandardMaterial({color:0xcbd1d5,roughness:.75,side:THREE.DoubleSide})
 const led=new THREE.MeshBasicMaterial({color:0xd2ebff})
 const redLed=new THREE.MeshBasicMaterial({color:0xff161b})
@@ -14,7 +14,7 @@ const headliner=new THREE.MeshStandardMaterial({color:0x14171c,roughness:.98,met
 
 function mesh(geometry,material,parent,position=[0,0,0]) {
   const object=new THREE.Mesh(geometry,material)
-  object.position.set(...position);object.castShadow=!material.isShaderMaterial;object.receiveShadow=true;parent.add(object)
+  object.position.set(...position);object.castShadow=!material.isShaderMaterial&&material!==glass;object.receiveShadow=true;parent.add(object)
   return object
 }
 function line(points,radius,material,parent) {
