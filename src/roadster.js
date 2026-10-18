@@ -1,180 +1,219 @@
 import * as THREE from 'three'
 
-const v = (x, y, z) => new THREE.Vector3(x, y, z)
-const paint = new THREE.MeshPhysicalMaterial({ color: 0x9f050c, metalness: .26, roughness: .28, clearcoat: .42, clearcoatRoughness: .2, envMapIntensity: .65 })
-const black = new THREE.MeshStandardMaterial({ color: 0x030405, metalness: .05, roughness: .7, envMapIntensity: .2 })
-const rubber = new THREE.MeshStandardMaterial({ color: 0x101113, roughness: .92 })
-const silver = new THREE.MeshStandardMaterial({ color: 0xa5b0ba, metalness: .94, roughness: .23 })
-const glass = new THREE.MeshPhysicalMaterial({ color: 0x162b38, metalness: .45, roughness: .12, transparent: true, opacity: .72, side: THREE.DoubleSide, clearcoat: 1 })
-const lamp = new THREE.MeshBasicMaterial({ color: 0xd4eaff })
-const tail = new THREE.MeshBasicMaterial({ color: 0xff1d10 })
+const v=(x,y,z)=>new THREE.Vector3(x,y,z)
+const paint=new THREE.MeshPhysicalMaterial({color:0xc4c8cb,metalness:.58,roughness:.26,clearcoat:.7,clearcoatRoughness:.18,envMapIntensity:.8,side:THREE.DoubleSide})
+const carbon=new THREE.MeshStandardMaterial({color:0x080b0f,metalness:.3,roughness:.38,side:THREE.DoubleSide})
+const rubber=new THREE.MeshStandardMaterial({color:0x0e1013,roughness:.9})
+const alloy=new THREE.MeshStandardMaterial({color:0xd7dadd,metalness:.68,roughness:.26,envMapIntensity:1.1})
+const glass=new THREE.MeshPhysicalMaterial({color:0x0b1420,metalness:.55,roughness:.1,clearcoat:1,side:THREE.FrontSide,transparent:true,opacity:.87})
+const upholstery=new THREE.MeshStandardMaterial({color:0xcbd1d5,roughness:.75,side:THREE.DoubleSide})
+const led=new THREE.MeshBasicMaterial({color:0xd2ebff})
+const redLed=new THREE.MeshBasicMaterial({color:0xff161b})
+const darkMetal=new THREE.MeshStandardMaterial({color:0x343c45,metalness:.85,roughness:.35})
+const headliner=new THREE.MeshStandardMaterial({color:0x14171c,roughness:.98,metalness:0,envMapIntensity:.05,side:THREE.DoubleSide})
 
-function mesh(geometry, material, parent, position = [0, 0, 0]) {
-  const object = new THREE.Mesh(geometry, material)
-  object.position.set(...position)
-  object.castShadow = true
-  object.receiveShadow = true
-  parent.add(object)
+function mesh(geometry,material,parent,position=[0,0,0]) {
+  const object=new THREE.Mesh(geometry,material)
+  object.position.set(...position);object.castShadow=true;object.receiveShadow=true;parent.add(object)
+  return object
+}
+function line(points,radius,material,parent) {
+  return mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p=>v(...p))),Math.max(8,points.length*5),radius,6,false),material,parent)
+}
+function panel(points,material,parent) {
+  const geometry=new THREE.BufferGeometry(),positions=[],indices=[]
+  points.forEach(point=>positions.push(...point))
+  for(let i=1;i<points.length-1;i++)indices.push(0,i,i+1)
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setIndex(indices);geometry.computeVertexNormals()
+  return mesh(geometry,material,parent)
+}
+function box(size,material,parent,position) { return mesh(new THREE.BoxGeometry(...size),material,parent,position) }
+function cylinder(radius,length,material,parent,position) {
+  const object=mesh(new THREE.CylinderGeometry(radius,radius,length,48),material,parent,position)
+  object.rotation.x=Math.PI/2
   return object
 }
 
-function tube(points, radius, material, parent, segments = 40) {
-  return mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => v(...p))), segments, radius, 6, false), material, parent)
-}
-
-function surface(rows, material, parent, exclude = () => false) {
-  const vertices = [], indices = [], cols = rows[0].length
-  rows.forEach(row => row.forEach(point => vertices.push(...point)))
-  for (let i = 0; i < rows.length - 1; i++) for (let j = 0; j < cols - 1; j++) {
-    const a = i * cols + j, b = a + cols
-    const points=[rows[i][j],rows[i+1][j],rows[i][j+1],rows[i+1][j+1]]
-    if(points.some(exclude))continue
-    indices.push(a, a + 1, b, b, a + 1, b + 1)
-  }
-  const geometry = new THREE.BufferGeometry()
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
-  geometry.setIndex(indices)
-  geometry.computeVertexNormals()
-  return mesh(geometry, material, parent)
-}
+// proportions reconstructed from the supplied renders, not tesla manufacturing geometry.
+export const referenceEnvelope={length:4.5,width:1.98,height:1.18,wheelbase:2.70}
 
 export function createRoadster() {
-  const root = new THREE.Group(), shell = new THREE.Group(), details = new THREE.Group(), wheels = new THREE.Group()
-  root.add(shell, details, wheels)
-  // public exterior dimensions constrain the envelope; the surface itself is an interpretation.
-  const stations = [
-    [-1.973, .49, .38, .25], [-1.85, .72, .49, .23], [-1.6, .83, .61, .23],
-    [-1.18, .855, .69, .22], [-.8, .81, .67, .2], [-.4, .78, .66, .19],
-    [.1, .79, .67, .19], [.65, .84, .72, .21], [1.171, .87, .73, .24],
-    [1.6, .83, .64, .26], [1.9, .76, .58, .28], [1.973, .71, .54, .29],
+  const root=new THREE.Group(),shell=new THREE.Group(),details=new THREE.Group(),wheels=new THREE.Group()
+  root.add(shell,details,wheels)
+  const wheelX=[-1.34,1.36],wheelRadius=.355
+  const profiles=[
+    [-2.25,.84,.51],[-2.12,.94,.55],[-1.7,.97,.65],[-1.34,.99,.71],
+    [-.86,.95,.72],[-.25,.92,.71],[.45,.94,.73],[1.01,.99,.77],
+    [1.36,1.01,.79],[1.9,.98,.77],[2.25,.91,.74],
   ]
-  const stationCurve = new THREE.CatmullRomCurve3(stations.map(s => v(s[0], s[1], s[2])))
-  const rows = []
-  for (let i = 0; i <= 240; i++) {
-    const p = stationCurve.getPoint(i / 240), x = p.x, width = p.y, top = p.z, bottom = .23
-    const row = []
-    for (let j = 0; j <= 96; j++) {
-      const angle = j / 96 * Math.PI * 2, sine = Math.sin(angle)
-      const z = Math.sign(sine) * Math.pow(Math.abs(sine), .35) * width
-      const y = bottom + (top - bottom) * (Math.cos(angle) + 1) / 2
-      row.push([x, y, z])
-    }
-    rows.push(row)
+  const longitudinal=new THREE.CatmullRomCurve3(profiles.map(p=>v(...p)),false,'catmullrom',.2)
+  const loops=[]
+  for(let i=0;i<=220;i++) {
+    const p=longitudinal.getPoint(i/220),x=p.x,w=p.y,h=p.z
+    const fender=Math.exp(-Math.pow((x+1.34)/.5,4))*.10+Math.exp(-Math.pow((x-1.36)/.55,4))*.065
+    loops.push([[x,h,0],[x,h-.025+fender*.7,w*.72],[x,h-.05+fender,w],[x,.37,w],[x,.22,w*.91],[x,.19,0],[x,.22,-w*.91],[x,.37,-w],[x,h-.05+fender,-w],[x,h-.025+fender*.7,-w*.72],[x,h,0]])
   }
-  const body = surface(rows, paint, shell, ([x,y,z]) => {
-    const dx=Math.min(Math.abs(x+1.18),Math.abs(x-1.171))
-    return Math.abs(z)>.64 && dx*dx+(y-.314)**2<.345**2
-  })
-  body.material.side = THREE.DoubleSide
-  // sill rails, nose intake and diffuser.
-  for (const sign of [-1, 1]) {
-    for(const x of [-1.18,1.171]) {
-      const arc=Array.from({length:33},(_,i)=>{const a=i/32*Math.PI;return [x+Math.cos(a)*.353,.314+Math.sin(a)*.353,sign*(x<0?.845:.86)]})
-      tube(arc,.012,paint,shell)
+  const inArch=([x,y,z])=>Math.abs(z)>.71&&Math.min(...wheelX.map(cx=>(x-cx)**2))+(y-wheelRadius)**2<.375**2
+  const inDoor=([x,y,z])=>x>-.75&&x<.88&&Math.abs(z)>.71&&y>.24
+  const inCockpit=([x,y,z])=>x>-.73&&x<.9&&Math.abs(z)<.8&&y>.55
+  // separate strips preserve the folded metal creases rather than smoothing every edge.
+  for(let edge=0;edge<10;edge++) {
+    const positions=[],indices=[],steps=10
+    for(let i=0;i<loops.length;i++)for(let j=0;j<=steps;j++){
+      const a=loops[i][edge],b=loops[i][edge+1],t=j/steps
+      positions.push(a[0],a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t)
     }
-    tube([[-.83,.25,sign*.8],[0,.21,sign*.81],[.76,.27,sign*.84]], .026, paint, shell)
-    tube([[-1.86,.43,sign*.71],[-1.42,.68,sign*.77],[-.91,.66,sign*.74],[-.58,.68,sign*.64]], .009, paint, shell)
-    tube([[-.34,.67,sign*.77],[.42,.66,sign*.79],[.72,.68,sign*.78]], .006, black, details)
-    tube([[.62,.69,sign*.8],[.77,.52,sign*.85],[.57,.35,sign*.8]], .008, black, details)
-    const vent = mesh(new THREE.BoxGeometry(.22,.065,.013),black,details,[.63,.49,sign*.827]);vent.rotation.z=.3
-    // swept headlamp lenses, following the front fender.
-    const head = mesh(new THREE.SphereGeometry(1,32,16),black,details,[-1.65,.578,sign*.56]);head.scale.set(.24,.027,.13);head.rotation.z=.36
-    for(let k=0;k<3;k++) {
-      const led = mesh(new THREE.SphereGeometry(1,20,12),lamp,details,[-1.77+k*.075,.59+k*.016,sign*.57]);led.scale.set(.025,.014,.055)
+    for(let i=0;i<loops.length-1;i++)for(let j=0;j<steps;j++){
+      const a=i*(steps+1)+j,b=a+steps+1
+      const quad=[a,a+1,b,b+1].map(n=>positions.slice(n*3,n*3+3))
+      if(quad.some(inArch)||quad.some(inDoor)||quad.some(inCockpit))continue
+      indices.push(a,a+1,b,b,a+1,b+1)
     }
-    tube([[-1.84,.44,sign*.66],[-1.9,.435,sign*.55]], .009, lamp, details)
-    for(let k=0;k<2;k++) {
-      const light = mesh(new THREE.CylinderGeometry(.052,.052,.018,32),tail,details,[1.935,.475,sign*(.49+k*.135)]);light.rotation.z=Math.PI/2
-      const ring = mesh(new THREE.TorusGeometry(.055,.009,8,32),black,details,[1.948,.475,sign*(.49+k*.135)]);ring.rotation.y=Math.PI/2
-    }
-    const mirror = mesh(new THREE.SphereGeometry(1,24,12),paint,details,[-.42,.79,sign*.88]);mirror.scale.set(.12,.045,.065)
-    tube([[-.38,.73,sign*.73],[-.42,.77,sign*.86]],.016,black,details)
+    const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setIndex(indices);geometry.computeVertexNormals()
+    mesh(geometry,[3,4,5,6].includes(edge)?carbon:paint,shell)
   }
-  const intake = mesh(new THREE.BoxGeometry(.022,.12,1.02),black,details,[-1.95,.32,0]);intake.rotation.z=-.15
-  for(let k=0;k<3;k++)mesh(new THREE.BoxGeometry(.025,.004,.95),black,details,[-1.966,.29+k*.026,0])
-  mesh(new THREE.BoxGeometry(.16,.09,1.1),black,details,[1.88,.29,0])
-  for(let k=0;k<5;k++)mesh(new THREE.BoxGeometry(.23,.09,.012),black,details,[1.85,.24,-.46+k*.23])
-  tube([[1.67,.654,-.74],[1.76,.645,0],[1.67,.654,.74]],.018,paint,shell)
-  // open cockpit, swept windshield and structural surround.
-  const cockpit = mesh(new THREE.SphereGeometry(1,48,24),black,details,[.16,.703,0]);cockpit.scale.set(.79,.09,.605)
-  const windRows=[]
-  for(let i=0;i<=14;i++) {
-    const t=i/14,row=[]
-    for(let j=0;j<=24;j++) {
-      const u=j/24*2-1
-      row.push([-.63+t*.49-.055*(1-u*u), .7+t*.427-.035*u*u, u*(.64-t*.12)])
-    }
-    windRows.push(row)
-  }
-  surface(windRows,glass,details)
-  for(const sign of [-1,1]) tube([[-.63,.665,sign*.64],[-.4,.91,sign*.59],[-.14,1.092,sign*.52]],.021,paint,shell)
-  tube([[-.14,1.092,-.52],[-.19,1.127,0],[-.14,1.092,.52]],.022,paint,shell)
-  tube([[-.63,.665,-.64],[-.71,.7,0],[-.63,.665,.64]],.018,black,details)
+  // front: a straight light blade, broad unbroken hood and triangular fender shoulders.
+  panel([[-2.257,.475,-.84],[-2.257,.475,.84],[-2.22,.295,.87],[-2.22,.295,-.87]],carbon,details)
+  box([.014,.044,1.71],carbon,details,[-2.275,.49,0])
+  box([.018,.012,1.66],led,details,[-2.288,.494,0])
+  panel([[-2.30,.23,-.91],[-2.30,.23,.91],[-2.1,.21,.96],[-2.1,.21,-.96]],carbon,details)
   for(const sign of [-1,1]) {
-    const seat = new THREE.Group();details.add(seat);seat.position.set(.3,.68,sign*.28)
-    const back = mesh(new THREE.CapsuleGeometry(.14,.13,6,16),black,seat,[.17,.13,0]);back.scale.set(.55,1,1);back.rotation.z=.2
-    const headrest = mesh(new THREE.SphereGeometry(.1,20,12),black,seat,[.19,.32,0]);headrest.scale.set(.65,.8,1);headrest.rotation.z=.16
-    mesh(new THREE.BoxGeometry(.4,.055,.29),black,seat,[0,0,0])
-    tube([[.55,.77,sign*.47],[.61,1.04,sign*.44],[.78,1.04,sign*.2],[.8,.77,sign*.15]],.026,silver,details)
-    const belt = mesh(new THREE.BoxGeometry(.025,.27,.008),new THREE.MeshStandardMaterial({color:0x812126,roughness:.8}),seat,[.095,.11,.08]);belt.rotation.z=.16
+    line([[-2.12,.555,sign*.69],[-1.62,.666,sign*.61],[-.86,.723,sign*.65]],.0035,carbon,details)
+    line([[-.77,.25,sign*.91],[.1,.225,sign*.94],[.95,.26,sign*.99]],.018,carbon,details)
+    const mirror=mesh(new THREE.SphereGeometry(1,24,12),carbon,details,[-.65,.79,sign*1.025]);mirror.scale.set(.105,.035,.049)
+    line([[-.64,.75,sign*.87],[-.65,.78,sign*1.01]],.009,carbon,details)
+    for(const x of wheelX) {
+      const points=Array.from({length:49},(_,i)=>{const a=i/48*Math.PI;return[x+Math.cos(a)*.383,wheelRadius+Math.sin(a)*.383,sign*(x<0?.984:1.002)]})
+      line(points,.009,paint,shell)
+    }
   }
-  const steering = mesh(new THREE.TorusGeometry(.115,.014,8,32),black,details,[-.25,.88,.28]);steering.rotation.y=Math.PI/2;steering.rotation.z=-.3
-  mesh(new THREE.BoxGeometry(.16,.05,1),black,details,[-.43,.73,0])
-  // forged rims, brake rotors, calipers and circumferential tire grooves.
+  // the cabin is an enclosed dark canopy with a continuous roof/rear-glass silhouette.
+  panel([[-.87,.725,-.65],[-.87,.725,.65],[-.26,1.17,.58],[-.26,1.17,-.58]],glass,details)
+  panel([[-.26,1.17,-.58],[-.26,1.17,.58],[.58,1.18,.56],[.58,1.18,-.56]],glass,details)
+  panel([[-.25,1.154,-.55],[-.25,1.154,.55],[.58,1.165,.54],[.58,1.165,-.54]],headliner,details)
+  panel([[.58,1.18,-.56],[.58,1.18,.56],[1.49,.79,.68],[1.49,.79,-.68]],glass,details)
+  for(const sign of [-1,1]) {
+    line([[-.87,.725,sign*.65],[-.26,1.17,sign*.58],[.58,1.18,sign*.56],[1.49,.79,sign*.68]],.012,paint,shell)
+    panel([[.83,.75,sign*.91],[1.52,.78,sign*.83],[.58,1.18,sign*.56]],paint,shell)
+    line([[.65,1.157,sign*.59],[1.52,.79,sign*.7]],.006,carbon,details)
+  }
+  line([[-.86,.73,-.65],[-.91,.75,0],[-.86,.73,.65]],.012,carbon,details)
+  // doors pivot at the leading edge; glazing, inner trim and outer skin move as one assembly.
+  const doors=[]
+  for(const sign of [-1,1]) {
+    const pivot=new THREE.Group();pivot.position.set(-.75,.69,sign*.87);shell.add(pivot)
+    const local=points=>points.map(([x,y,z])=>[x+.75,y-.69,z-sign*.87])
+    panel(local([[-.75,.68,sign*.945],[.88,.72,sign*.965],[.88,.31,sign*.93],[-.75,.27,sign*.91]]),paint,pivot)
+    panel(local([[-.72,.65,sign*.91],[.86,.69,sign*.93],[.86,.35,sign*.905],[-.72,.31,sign*.875]]),carbon,pivot)
+    panel(local([[-.73,.725,sign*.91],[-.23,1.144,sign*.585],[.56,1.153,sign*.565],[.88,.78,sign*.94]]).reverse(),glass,pivot)
+    line(local([[-.73,.725,sign*.91],[-.23,1.144,sign*.585],[.56,1.153,sign*.565],[.88,.78,sign*.94]]),.009,carbon,pivot)
+    line(local([[-.72,.67,sign*.925],[.8,.69,sign*.945]]),.004,redLed,pivot)
+    panel(local([[-.65,.52,sign*.90],[.63,.54,sign*.92],[.73,.59,sign*.92],[-.51,.59,sign*.90]]),upholstery,pivot)
+    box([.14,.013,.012],carbon,pivot,local([[.68,.68,sign*.971]])[0])
+    doors.push({pivot,sign})
+  }
+  // rear: full-width tail light, four metal nozzles and a recessed four-channel diffuser.
+  panel([[2.255,.725,-.91],[2.255,.725,.91],[2.255,.32,.94],[2.255,.32,-.94]],paint,shell)
+  box([.04,.09,1.8],carbon,details,[2.275,.68,0])
+  box([.046,.017,1.75],redLed,details,[2.3,.699,0])
+  box([.046,.018,1.75],carbon,details,[2.3,.653,0])
+  box([.025,.145,.34],upholstery,details,[2.285,.53,0])
+  box([.03,.014,.19],darkMetal,details,[2.305,.53,0])
+  box([.19,.34,1.54],carbon,details,[2.23,.275,0])
+  const exhaust=new THREE.Group();root.add(exhaust)
+  const plumeMaterial=new THREE.ShaderMaterial({uniforms:{uOpacity:{value:0}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+    vertexShader:'varying vec2 vUv;varying float vFacing;void main(){vUv=uv;vFacing=abs(normalize(normalMatrix*normal).z);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+    fragmentShader:'uniform float uOpacity;varying vec2 vUv;varying float vFacing;void main(){float a=pow(clamp(vFacing,0.,1.),1.8)*pow(clamp(vUv.y,0.,1.),1.5);gl_FragColor=vec4(.72,.84,1.,a*uOpacity);}'})
+  for(const z of [-.6,-.2,.2,.6]) {
+    const rim=mesh(new THREE.TorusGeometry(.068,.008,10,40),alloy,details,[2.36,.455,z]);rim.rotation.y=Math.PI/2
+    const inner=mesh(new THREE.CylinderGeometry(.059,.05,.13,32,1,true),darkMetal,details,[2.32,.455,z]);inner.rotation.z=Math.PI/2
+    const hole=mesh(new THREE.CircleGeometry(.052,32),carbon,details,[2.28,.455,z]);hole.rotation.y=Math.PI/2
+    const fan=mesh(new THREE.TorusGeometry(.107,.011,8,32),darkMetal,details,[2.34,.24,z]);fan.rotation.y=Math.PI/2
+    for(let blade=0;blade<7;blade++) {
+      const a=blade/7*Math.PI*2
+      const bladeMesh=box([.015,.028,.079],darkMetal,details,[2.34,.24+Math.sin(a)*.052,z+Math.cos(a)*.052]);bladeMesh.rotation.x=-a+.4
+    }
+    const plume=mesh(new THREE.ConeGeometry(.09,.9,24,1,true),plumeMaterial,exhaust,[2.83,.455,z]);plume.rotation.z=Math.PI/2
+  }
+  for(const z of [-.8,-.4,0,.4,.8])box([.32,.27,.014],carbon,details,[2.24,.21,z])
+  // active aero: a high, narrow wing with vertical endplates.
+  const wing=new THREE.Group();root.add(wing)
+  for(const sign of [-1,1]) {
+    box([.05,.24,.023],carbon,wing,[1.91,.93,sign*.68])
+    panel([[1.73,1.085,sign*1.02],[2.15,1.07,sign*1.02],[2.22,.75,sign*1.05],[2.09,.77,sign*1.05]],paint,wing)
+  }
+  const wingBlade=box([.34,.034,2.03],carbon,wing,[1.94,1.07,0]);wingBlade.rotation.z=-.035
+  line([[2.10,1.075,-1],[2.10,1.075,0],[2.10,1.075,1]],.006,paint,wing)
+  // interior: light sculpted seats, a rectangular yoke and a landscape center display.
+  box([1.72,.05,1.55],carbon,details,[.16,.34,0])
+  box([.05,.38,1.46],carbon,details,[-.78,.49,0])
+  box([.18,.02,.12],carbon,details,[.08,1.14,0])
+  box([.38,.075,1.43],carbon,details,[-.57,.70,0])
+  panel([[-.7,.735,-.7],[-.7,.735,.7],[-.42,.70,.7],[-.42,.70,-.7]],upholstery,details)
+  box([.84,.16,.17],upholstery,details,[.03,.44,0])
+  const screen=box([.025,.235,.39],carbon,details,[-.37,.79,0]);screen.rotation.z=-.12
+  box([.027,.002,.32],redLed,details,[-.352,.708,0])
+  const screenTexture=createScreenTexture()
+  const screenSurface=mesh(new THREE.PlaneGeometry(.365,.205),new THREE.MeshBasicMaterial({map:screenTexture}),details,[-.349,.795,0]);screenSurface.rotation.y=Math.PI/2
+  const yokePoints=[[-.44,.84,.18],[-.44,.87,.2],[-.44,.87,.46],[-.44,.84,.49],[-.44,.72,.49],[-.44,.70,.46],[-.44,.70,.2],[-.44,.72,.18],[-.44,.84,.18]]
+  line(yokePoints,.017,upholstery,details)
+  box([.036,.105,.15],carbon,details,[-.435,.785,.335])
+  for(const sign of [-1,1]) {
+    const seat=new THREE.Group();seat.position.set(.25,.39,sign*.39);details.add(seat)
+    const base=mesh(new THREE.CapsuleGeometry(.18,.22,8,20),upholstery,seat,[-.02,.06,0]);base.rotation.z=Math.PI/2;base.scale.set(1,.65,1)
+    const back=mesh(new THREE.CapsuleGeometry(.17,.22,8,20),upholstery,seat,[.25,.30,0]);back.scale.set(.5,1,1);back.rotation.z=-.12
+    const insert=mesh(new THREE.CapsuleGeometry(.12,.15,6,16),carbon,seat,[.155,.29,0]);insert.scale.set(.14,1,1)
+    const head=mesh(new THREE.SphereGeometry(.13,24,16),upholstery,seat,[.27,.53,0]);head.scale.set(.6,.85,1)
+    line([[.18,.18,-.15],[.21,.38,-.15],[.24,.47,-.1]],.006,carbon,seat)
+  }
+  line([[-.72,.735,-.69],[-.72,.735,0],[-.72,.735,.69]],.003,redLed,details)
+  // turbine-inspired five swept spokes and actual recessed brake discs.
   const wheelCenters=[]
-  for(const x of [-1.18,1.171])for(const sign of [-1,1]) {
-    const wheel = new THREE.Group();wheel.position.set(x,.314,sign*.788);wheels.add(wheel);wheelCenters.push(wheel)
-    const tire = mesh(new THREE.CylinderGeometry(.314,.314,.207,64,1),rubber,wheel);tire.rotation.x=Math.PI/2
+  for(const x of wheelX)for(const sign of [-1,1]) {
+    const wheel=new THREE.Group();wheel.position.set(x,wheelRadius,sign*.914);wheels.add(wheel);wheelCenters.push(wheel)
+    cylinder(wheelRadius,.235,rubber,wheel,[0,0,0])
     for(const side of [-1,1]) {
-      const sidewall = mesh(new THREE.TorusGeometry(.257,.054,12,64),rubber,wheel,[0,0,side*.093])
-      sidewall.scale.z=.42
+      const sidewall=mesh(new THREE.TorusGeometry(.303,.05,12,72),rubber,wheel,[0,0,side*.106]);sidewall.scale.z=.38
     }
-    for(let k=0;k<4;k++)mesh(new THREE.TorusGeometry(.313,.002,4,64),black,wheel,[0,0,-.07+k*.046])
-    const rim = mesh(new THREE.TorusGeometry(.222,.014,10,48),silver,wheel,[0,0,sign*.11])
-    rim.scale.z=.65
-    const rotor = mesh(new THREE.CylinderGeometry(.181,.181,.012,48),silver,wheel,[0,0,sign*.085]);rotor.rotation.x=Math.PI/2
-    const hub = mesh(new THREE.CylinderGeometry(.047,.047,.027,24),silver,wheel,[0,0,sign*.125]);hub.rotation.x=Math.PI/2
-    for(let k=0;k<10;k++) {
-      const a=k/10*Math.PI*2
-      const spoke=mesh(new THREE.BoxGeometry(.025,.183,.017),silver,wheel,[Math.sin(a)*.132,Math.cos(a)*.132,sign*.117]);spoke.rotation.z=-a+.15
+    cylinder(.252,.018,carbon,wheel,[0,0,sign*.12])
+    cylinder(.204,.014,darkMetal,wheel,[0,0,sign*.13])
+    const rim=mesh(new THREE.TorusGeometry(.272,.012,10,72),alloy,wheel,[0,0,sign*.137]);rim.scale.z=.6
+    for(let i=0;i<5;i++) {
+      const a=i/5*Math.PI*2,transform=([px,py])=>[Math.cos(a)*px-Math.sin(a)*py,Math.sin(a)*px+Math.cos(a)*py,sign*.148]
+      panel([[.035,-.025],[.115,-.06],[.265,.035],[.245,.10],[.085,.065]].map(transform),alloy,wheel)
+      for(let j=0;j<3;j++) {
+        const b=a+j*.16
+        const dot=mesh(new THREE.CircleGeometry(.006,6),carbon,wheel,[Math.cos(b)*.19,Math.sin(b)*.19,sign*.141]);if(sign<0)dot.rotation.y=Math.PI
+      }
     }
-    mesh(new THREE.BoxGeometry(.065,.14,.055),paint,wheel,[.125,0,sign*.082])
+    cylinder(.048,.025,alloy,wheel,[0,0,sign*.158])
+    box([.07,.14,.045],darkMetal,wheel,[.15,0,sign*.134])
+    for(let t=0;t<4;t++)mesh(new THREE.TorusGeometry(wheelRadius,.002,4,72),carbon,wheel,[0,0,-.08+t*.052])
   }
-  const wire = new THREE.Group()
-  root.add(wire)
   const wireMaterials=[]
-  shell.traverse(object=>{
-    if(!object.isMesh)return
-    const material=new THREE.LineBasicMaterial({color:0xa8d0e0,transparent:true,opacity:0,depthTest:true})
+  const shellMeshes=[]
+  shell.traverse(object=>{if(object.isMesh)shellMeshes.push(object)})
+  shellMeshes.forEach(object=>{
+    const material=new THREE.LineBasicMaterial({color:0x9dbfce,transparent:true,opacity:0})
     wireMaterials.push(material)
-    const geometry=object===body?new THREE.WireframeGeometry(object.geometry):new THREE.EdgesGeometry(object.geometry,28)
-    const lines=new THREE.LineSegments(geometry,material)
-    lines.position.copy(object.position);lines.rotation.copy(object.rotation);lines.scale.copy(object.scale)
-    wire.add(lines)
+    const lines=new THREE.LineSegments(new THREE.EdgesGeometry(object.geometry,12),material)
+    object.add(lines)
   })
-  // low-density section curves keep the engineering mode legible over the triangular mesh.
   const sections=new THREE.Group();root.add(sections)
-  const sectionMaterial=new THREE.LineBasicMaterial({color:0x76b4cf,transparent:true,opacity:0})
-  for(let i=7;i<rows.length;i+=15)sections.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(rows[i].map(p=>v(...p))),sectionMaterial))
-  return {root,shell,details,wheels,wireMaterials,sectionMaterial,paint,glass,wheelCenters}
+  const sectionMaterial=new THREE.LineBasicMaterial({color:0x85b9d2,transparent:true,opacity:0})
+  for(let i=6;i<loops.length;i+=14)sections.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(loops[i].map(p=>v(...p))),sectionMaterial))
+  return {root,shell,details,wheels,wireMaterials,sectionMaterial,paint,glass,wheelCenters,doors,wing,plumeMaterial}
 }
 
-export function createFalcon() {
-  const root=new THREE.Group(), white=new THREE.MeshStandardMaterial({color:0xcbd2d9,metalness:.45,roughness:.34}),dark=new THREE.MeshStandardMaterial({color:0x111923,metalness:.6,roughness:.4})
-  // normalized here for composition; documented dimensions are shown in the data panel.
-  for(const x of [-.42,0,.42]) {
-    const height=x===0?4.65:3.7
-    mesh(new THREE.CylinderGeometry(.145,.145,height,32),white,root,[x,height/2,0])
-    mesh(new THREE.CylinderGeometry(.148,.148,.2,32),dark,root,[x,height-.45,0])
-    mesh(new THREE.ConeGeometry(.145,.45,32),white,root,[x,height+.225,0])
-    for(let n=0;n<9;n++){
-      const a=n/9*Math.PI*2
-      mesh(new THREE.CylinderGeometry(.028,.042,.13,10),dark,root,[x+Math.cos(a)*.09,-.065,Math.sin(a)*.09])
-    }
-    for(const z of [-1,1])for(const sign of [-1,1]) {
-      const fin=mesh(new THREE.BoxGeometry(.012,.42,.04),dark,root,[x+sign*.16,.25,z*.11]);fin.rotation.z=sign*.35
-    }
-  }
-  root.position.set(2.9,-.45,-1.8)
-  return root
+function createScreenTexture() {
+  const canvas=document.createElement('canvas');canvas.width=512;canvas.height=288
+  const ctx=canvas.getContext('2d');ctx.fillStyle='#080e15';ctx.fillRect(0,0,512,288)
+  ctx.fillStyle='#dce5eb';ctx.font='24px monospace';ctx.fillText('roadster',24,40)
+  ctx.fillStyle='#7f919e';ctx.font='12px monospace';ctx.fillText('concept / system overview',24,65)
+  ctx.strokeStyle='#526773';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(70,175);ctx.lineTo(95,145);ctx.lineTo(185,136);ctx.lineTo(220,109);ctx.lineTo(320,109);ctx.lineTo(360,142);ctx.lineTo(435,151);ctx.lineTo(448,178);ctx.closePath();ctx.stroke()
+  for(const x of [135,372]){ctx.beginPath();ctx.arc(x,175,25,0,Math.PI*2);ctx.stroke()}
+  ctx.strokeStyle='#e63a37';ctx.beginPath();ctx.moveTo(26,239);ctx.lineTo(486,239);ctx.stroke()
+  ctx.fillStyle='#b7c4cc';ctx.fillText('surface',28,270);ctx.fillText('aero',222,270);ctx.fillText('cabin',415,270)
+  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;return texture
 }
+
