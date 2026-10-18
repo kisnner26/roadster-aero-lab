@@ -13,6 +13,8 @@ export function stepExhibitionLoop(state,dt) {
   }
   const angle=state.loopAngle
   state.speed=Math.max(0,state.speed-9.81*Math.sin(angle)*dt)
+  // A car that stalls on the climb must come off the track instead of hanging there forever.
+  if(state.speed<.3&&angle>.05&&angle<Math.PI){state.grounded=false;state.loopAngle=null;state.loopCooldown=3;state.vx=state.speed;state.vz=0;state.vy=0;state.pitch=0;state.jumps++;return true}
   state.x=stuntLoop.x+stuntLoop.radius*Math.sin(angle);state.z=stuntLoop.z
   state.y=.028+stuntLoop.radius*(1-Math.cos(angle));state.pitch=angle;state.roll=0;state.heading=0
   state.vx=state.speed*Math.cos(angle);state.vz=0;state.vy=state.speed*Math.sin(angle)

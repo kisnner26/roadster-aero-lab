@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {createVehicleState,stepVehicle,stepVertical,vehicleConfig} from '../src/vehicle-physics.js'
-import {stuntSurface,collideStuntVehicles,stepExhibitionLoop} from '../src/stunt-physics.js'
+import {stuntSurface,collideStuntVehicles,stepExhibitionLoop,stuntLoop} from '../src/stunt-physics.js'
 
 function run(state,input,seconds,surface=0) {
   for(let i=0;i<seconds*120;i++)stepVehicle(state,input,1/120,surface)
@@ -110,4 +110,13 @@ test('el loop mantiene contacto invertido con succión y lo pierde sin ella a ba
   stepExhibitionLoop(active,1/120);assert.equal(active.grounded,true);assert.ok(active.y>35)
   const passive=createVehicleState();passive.loopAngle=Math.PI;passive.speed=2;passive.suction=false
   stepExhibitionLoop(passive,1/120);assert.equal(passive.grounded,false);assert.equal(passive.loopAngle,null)
+})
+
+test('un coche que se detiene en la subida del loop sale de la pista en vez de quedar colgado', () => {
+  const state = createVehicleState(stuntLoop.x, stuntLoop.z, 0)
+  state.speed = 12
+  state.suction = true
+  for (let i = 0; i < 120 * 10; i++) if (!stepExhibitionLoop(state, 1 / 120)) break
+  assert.equal(state.loopAngle ?? null, null)
+  assert.equal(state.grounded, false)
 })
