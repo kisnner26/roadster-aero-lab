@@ -5,6 +5,7 @@ import {stepExhibitionLoop,stuntLoop} from './stunt-physics.js'
 import {createCircuit} from './circuit.js'
 import {vehicleVisualTargets} from './vehicle-visuals.js'
 import {createGamepadInput} from './gamepad-input.js'
+import {createAirTrail} from './air-trail.js'
 
 const $=selector=>document.querySelector(selector)
 const heldKeys=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','ShiftLeft','ShiftRight','KeyX','KeyI','KeyK','KeyJ','KeyL'])
@@ -20,6 +21,28 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
   let active=false,paused=false,exterior=false,raf=0,last=0,accumulator=0,state=createVehicleState(),lap=1,lastProgress=0,lapTime=0,dashTimer=0,viewReady=false
   let headYaw=0,headPitch=0,dragging=false,dragX=0,dragY=0,hasDriven=false,screenFocus=false,previousExterior=false,area='circuit',notice=''
   let lastControls='',entryVersion=0
+  let trail=null,headlights=null
+  const nozzleVector=new THREE.Vector3(),nozzleDirection=new THREE.Vector3(),carVelocity=new THREE.Vector3()
+  const nozzles=[
+    ...[-.6,-.2,.2,.6].map(z=>({kind:'boost',local:[2.3,.455,z],axis:[1,0,0],rate:150,speed:26,spread:.1})),
+    ...[-1.1,1.1].flatMap(x=>[-.73,.73].map(z=>({kind:'lift',local:[x,.2,z],axis:[0,-1,0],rate:90,speed:15,spread:.16}))),
+    ...[-.7,.93].flatMap(x=>[-1,1].map(sign=>({kind:'assist',local:[x,.2,sign*.95],axis:[0,-.25,sign],rate:60,speed:12,spread:.2,sign})))
+  ]
+  const emitters=nozzles.map(nozzle=>({position:new THREE.Vector3(),direction:new THREE.Vector3(),inherit:new THREE.Vector3(),rate:0,speed:nozzle.speed,spread:nozzle.spread,carry:0}))
+  function emitAir(dt) {
+    if(!trail)return
+    car.root.updateMatrixWorld(true)
+    carVelocity.set(state.vx,state.vy,state.vz).multiplyScalar(.55)
+    nozzles.forEach((nozzle,i)=>{
+      const emitter=emitters[i]
+      const on=nozzle.kind==='boost'?state.boost:nozzle.kind==='lift'?state.lift:state.assist&&nozzle.sign===(state.steer>0?-1:1)
+      emitter.rate=on?nozzle.rate:0
+      emitter.position.copy(nozzleVector.set(...nozzle.local).applyMatrix4(car.root.matrixWorld))
+      emitter.direction.copy(nozzleDirection.set(...nozzle.axis).transformDirection(car.root.matrixWorld))
+      emitter.inherit.copy(carVelocity)
+    })
+    trail.update(dt,emitters,renderer.domElement.height)
+  }
   $('#drive-map-track').setAttribute('d',createCircuit().mapPath)
 
   function clearInput() {
@@ -140,7 +163,7 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
     while(accumulator>=1/120){stepVehicle(state,input,1/120,world.nearest(state.x,state.z).distance);if(!stepExhibitionLoop(state,1/120))stepVertical(state,input,1/120,world.surface(state.x,state.z,state.heading));world.collision(state);accumulator-=1/120;lapTime+=1/120}
     if(state.y< -10||!Number.isFinite(state.x))reset()
     if(!dragging){headYaw*=Math.exp(-dt*3);headPitch*=Math.exp(-dt*3)}
-    audio.update(state);draw(dt);raf=requestAnimationFrame(tick)
+    emitAir(dt);audio.update(state);draw(dt);raf=requestAnimationFrame(tick)
   }
   async function enter() {
     const version=++entryVersion
@@ -149,6 +172,12 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
       world=createDrivingWorld(worldScene,car)
       $('#drive-map-track').setAttribute('d',world.mapPath)
     }
+    if(!trail)trail=createAirTrail(worldScene)
+    trail.clear()
+    if(!headlights){
+      headlights=[-.68,.68].map(z=>{const light=new THREE.SpotLight(0xe4eeff,0,110,.46,.55,1.4),target=new THREE.Object3D();light.position.set(-2.15,.5,z);target.position.set(-30,-.6,z*.5);car.root.add(light,target);light.target=target;return light})
+    }
+    headlights.forEach(light=>light.intensity=420)
     active=true;paused=document.hidden;exterior=false;screenFocus=false;last=0;accumulator=0
     worldScene.add(car.root);car.doors.forEach(({pivot})=>pivot.rotation.set(0,0,0));car.wireMaterials.forEach(material=>material.opacity=0);car.sectionMaterial.opacity=0;car.plumeMaterial.uniforms.uOpacity.value=0
     car.sections.visible=false;car.wireObjects.forEach(object=>object.visible=false)
@@ -167,6 +196,7 @@ export function createDrivingMode({renderer,studio,car,audio,onExit,onFrame=()=>
   function exit() {
     if(!active)return
     active=false;entryVersion++;cancelAnimationFrame(raf);clearInput();audio.setDriving(false)
+    headlights?.forEach(light=>light.intensity=0);trail?.clear()
     car.wing.rotation.z=0;car.brakeLight.color.set(0xff161b);car.reverseLights.visible=false
     studio.add(car.root);car.root.position.set(0,0,0);car.root.rotation.set(0,0,0);car.wheelCenters.forEach(wheel=>wheel.rotation.set(0,0,0));if(car.steering)car.steering.rotation.set(0,0,0);car.seats?.forEach(seat=>seat.visible=true);if(car.liftPlumeMaterial)car.liftPlumeMaterial.uniforms.uOpacity.value=0
     $('#experience').dataset.mode='studio';$('#drive-hud').hidden=true;$('#drive-toggle').setAttribute('aria-pressed','false');$('#drive-toggle').setAttribute('aria-label','iniciar conducción en pov');$('#drive-toggle').textContent='conducir ↗'
