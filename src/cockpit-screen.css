@@ -1,4 +1,5 @@
-.cockpit-dom{position:absolute;inset:0;overflow:hidden;z-index:2;pointer-events:none}.cockpit-dom[hidden]{display:none!important}
+.cockpit-dom{position:absolute;inset:0;overflow:clip!important;z-index:2;pointer-events:none}.cockpit-dom[hidden]{display:none!important}
+#experience:has(.cockpit-dom){overflow:clip}
 #infotainment{width:1024px!important;height:576px!important;max-width:none!important;max-height:none!important;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:hidden!important;background:#10151b;user-select:auto!important;backface-visibility:hidden;contain:layout paint}
 #infotainment .os-shell{width:1024px;height:576px!important;display:flex;flex-direction:column}
 #infotainment .os-topbar{height:44px;min-height:44px;padding:0 16px}#infotainment .os-brand{gap:12px}#infotainment .os-mark{font-size:24px}#infotainment h2{font-size:18px}#infotainment .os-system{gap:12px}#infotainment .os-system .os-park{display:block}#infotainment .os-system button{width:44px}#infotainment .os-build{display:none}

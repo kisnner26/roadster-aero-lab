@@ -66,12 +66,12 @@ export function createInfotainment({car,audio,cabinLight,carPreview,onOpen,onClo
   function stopBrowser() {$('#os-browser-frame').replaceChildren();$('.os-browser-preview').hidden=true}
   function open() {
     if(focused)return
-    returnFocus=document.activeElement;focused=true;onOpen();carPreview.draw();update();$('#os-close').focus()
+    returnFocus=document.activeElement;focused=true;onOpen();carPreview.draw();update();$('#os-close').focus({preventScroll:true})
   }
   function close() {
     if(!focused)return
     focused=false;onClose();drawTexture();onVisualChange()
-    if(returnFocus?.isConnected)returnFocus.focus()
+    if(returnFocus?.isConnected)returnFocus.focus({preventScroll:true})
   }
   function destroyYouTube() {playerGeneration++;player?.destroy?.();player=null;$('#os-youtube-host').replaceChildren();$('#os-video-empty').hidden=false;$('#os-video-form').removeAttribute('aria-busy');$('#os-video-status').textContent='youtube se conecta solo al cargar un vídeo.'}
   dialog.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();close()}event.stopPropagation()})

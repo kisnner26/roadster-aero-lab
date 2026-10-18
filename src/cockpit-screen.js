@@ -16,6 +16,8 @@ export function createCockpitScreen(car,element,container) {
   let width=0,height=0
   function render(scene,camera,{interactive=false,allowed=true}={}) {
     if(width!==container.clientWidth||height!==container.clientHeight){width=container.clientWidth;height=container.clientHeight;renderer.setSize(width,height)}
+    // Focus/iframe navigation must not scroll a hidden-overflow projection layer.
+    renderer.domElement.scrollLeft=0;renderer.domElement.scrollTop=0;container.scrollLeft=0;container.scrollTop=0
     camera.updateMatrixWorld();car.screenSurface.updateWorldMatrix(true,false)
     car.screenSurface.getWorldPosition(position);car.screenSurface.getWorldQuaternion(rotation)
     normal.set(0,0,1).applyQuaternion(rotation);toward.copy(camera.position).sub(position)
