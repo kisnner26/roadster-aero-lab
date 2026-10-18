@@ -8,10 +8,12 @@ const alloy=new THREE.MeshStandardMaterial({color:0xd7dadd,metalness:.68,roughne
 const glass=new THREE.MeshPhysicalMaterial({color:0x3a2a14,metalness:.55,roughness:.06,clearcoat:1,envMapIntensity:1.5,side:THREE.FrontSide,transparent:true,opacity:.9,depthWrite:false})
 const spokeDark=new THREE.MeshStandardMaterial({color:0x15181c,metalness:.7,roughness:.32,side:THREE.DoubleSide})
 const discLight=new THREE.MeshStandardMaterial({color:0xc9ccd0,metalness:.6,roughness:.34})
-const upholstery=new THREE.MeshStandardMaterial({color:0xcbd1d5,roughness:.75,side:THREE.DoubleSide})
+const upholstery=new THREE.MeshStandardMaterial({color:0xe6e8ea,roughness:.75,side:THREE.DoubleSide})
 const led=new THREE.MeshBasicMaterial({color:0xd2ebff})
 const redLed=new THREE.MeshBasicMaterial({color:0xff161b})
 const darkMetal=new THREE.MeshStandardMaterial({color:0x343c45,metalness:.85,roughness:.35})
+const microsuede=new THREE.MeshStandardMaterial({color:0x0b0c0e,roughness:1,metalness:0,envMapIntensity:.05,side:THREE.DoubleSide})
+const yokeGrey=new THREE.MeshStandardMaterial({color:0x5a5d61,roughness:.96,metalness:0})
 const headliner=new THREE.MeshStandardMaterial({color:0x14171c,roughness:.98,metalness:0,envMapIntensity:.05,side:THREE.DoubleSide})
 
 function mesh(geometry,material,parent,position=[0,0,0]) {
@@ -119,10 +121,12 @@ export function createRoadster({createCanvas=()=>document.createElement('canvas'
     const local=points=>points.map(([x,y,z])=>[x+.75,y-.69,z-sign*.87])
     const outerDoor=local([[-.75,.68,sign*.945],[.88,.72,sign*.965],[.88,.31,sign*.93],[-.75,.27,sign*.91]])
     panel(sign>0?outerDoor.reverse():outerDoor,paint,pivot)
-    panel(local([[-.72,.65,sign*.91],[.86,.69,sign*.93],[.86,.35,sign*.905],[-.72,.31,sign*.875]]),carbon,pivot)
+    panel(local([[-.72,.65,sign*.91],[.86,.69,sign*.93],[.86,.35,sign*.905],[-.72,.31,sign*.875]]),microsuede,pivot)
     panel(local([[-.73,.74,sign*.91],[-.6,.98,sign*.64],[-.12,1.15,sign*.6],[.56,1.155,sign*.565],[.88,.78,sign*.94]]).reverse(),glass,pivot)
     line(local([[-.73,.74,sign*.91],[-.6,.98,sign*.64],[-.12,1.15,sign*.6],[.56,1.155,sign*.565],[.88,.78,sign*.94]]),.009,carbon,pivot)
     line(local([[-.72,.67,sign*.925],[.8,.69,sign*.945]]),.004,redLed,pivot)
+    line(local([[-.62,.47,sign*.9],[.72,.49,sign*.915]]),.005,redLed,pivot)
+    line(local([[-.62,.36,sign*.89],[.72,.38,sign*.905]]),.0025,redLed,pivot)
     panel(local([[-.65,.52,sign*.90],[.63,.54,sign*.92],[.73,.59,sign*.92],[-.51,.59,sign*.90]]),upholstery,pivot)
     box([.14,.013,.012],carbon,pivot,local([[.68,.68,sign*.971]])[0])
     doors.push({pivot,sign})
@@ -171,36 +175,52 @@ export function createRoadster({createCanvas=()=>document.createElement('canvas'
   }
   const wingBlade=box([.34,.034,2.03],carbon,wing,[1.94,1.07,0]);wingBlade.rotation.z=-.035
   line([[2.10,1.075,-1],[2.10,1.075,0],[2.10,1.075,1]],.006,paint,wing)
-  // interior: light sculpted seats, a rectangular yoke and a landscape center display.
-  box([1.72,.05,1.55],carbon,details,[.16,.34,0])
-  box([.05,.38,1.46],carbon,details,[-.78,.49,0])
+  // interior: black microsuede dash with carbon trim, panoramic cluster, grey yoke, white perforated seats.
+  const carbonFibre=new THREE.MeshStandardMaterial({color:0x2a2f35,metalness:.45,roughness:.3,map:weaveTexture(createCanvas),side:THREE.DoubleSide})
+  const seatLeather=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.72,map:perforationTexture(createCanvas),side:THREE.DoubleSide})
+  box([1.72,.05,1.55],microsuede,details,[.16,.34,0])
+  box([.05,.38,1.46],microsuede,details,[-.78,.49,0])
   box([.18,.02,.12],carbon,details,[.08,1.14,0])
-  box([.38,.075,1.43],carbon,details,[-.57,.70,0])
-  panel([[-.7,.735,-.7],[-.7,.735,.7],[-.42,.70,.7],[-.42,.70,-.7]],upholstery,details)
-  box([.84,.16,.17],upholstery,details,[.03,.44,0])
+  box([.38,.075,1.43],microsuede,details,[-.57,.70,0])
+  box([.34,.012,1.3],carbonFibre,details,[-.57,.742,0])
+  box([.02,.03,1.34],carbonFibre,details,[-.385,.665,0])
+  panel([[-.7,.735,-.7],[-.7,.735,.7],[-.42,.70,.7],[-.42,.70,-.7]],microsuede,details)
+  // centre console: dark spine with a white lidded armrest.
+  box([.84,.16,.17],microsuede,details,[.03,.44,0])
+  box([.4,.07,.15],upholstery,details,[.34,.55,0])
+  box([.4,.012,.12],carbonFibre,details,[.34,.59,0])
+  box([.14,.012,.08],alloy,details,[-.2,.525,0])
   const screen=box([.025,.235,.39],carbon,details,[-.37,.79,0]);screen.rotation.z=-.12
   box([.027,.002,.32],redLed,details,[-.352,.708,0])
   const screenTexture=createScreenTexture(createCanvas)
   const screenSurface=mesh(new THREE.PlaneGeometry(.365,.205),new THREE.MeshBasicMaterial({map:screenTexture}),details,[-.349,.795,0]);screenSurface.rotation.y=Math.PI/2
+  // one panoramic cluster across the dash, drawn as two abutting faces.
   const driverScreens=[]
-  for(const z of [-.4,.4]){
-    box([.025,.075,.2],carbon,details,[-.67,.79,z])
+  box([.03,.215,1.06],carbon,details,[-.675,.845,0])
+  for(const z of [-.25,.25]){
     const canvas=createCanvas();canvas.width=512;canvas.height=192
     const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;driverScreens.push(texture)
-    const face=mesh(new THREE.PlaneGeometry(.185,.065),new THREE.MeshBasicMaterial({map:texture}),details,[-.654,.794,z]);face.rotation.y=Math.PI/2
+    const face=mesh(new THREE.PlaneGeometry(.5,.1875),new THREE.MeshBasicMaterial({map:texture}),details,[-.658,.845,z]);face.rotation.y=Math.PI/2
   }
-  const yokePoints=[[-.44,.84,.18],[-.44,.87,.2],[-.44,.87,.46],[-.44,.84,.49],[-.44,.72,.49],[-.44,.70,.46],[-.44,.70,.2],[-.44,.72,.18],[-.44,.84,.18]]
+  // yoke: open-top flat wheel in grey microsuede, two thick grips.
   const steering=new THREE.Group();steering.position.set(-.44,.785,.335);details.add(steering)
-  line(yokePoints.map(([x,y,z])=>[x+.44,y-.785,z-.335]),.017,upholstery,steering)
-  box([.036,.105,.15],carbon,steering,[.005,0,0])
+  line([[0,.075,-.155],[0,.03,-.172],[0,-.05,-.15],[0,-.078,-.08],[0,-.072,0],[0,-.078,.08],[0,-.05,.15],[0,.03,.172],[0,.075,.155]],.019,yokeGrey,steering)
+  for(const side of [-1,1])line([[0,.078,side*.155],[0,.02,side*.172]],.027,yokeGrey,steering)
+  box([.036,.06,.17],carbon,steering,[.005,-.03,0])
+  box([.012,.012,.1],redLed,steering,[-.014,-.03,0])
+  // aluminium pedals on the driver side.
+  for(const z of [.27,.4,.52]){
+    const pedal=box([.012,.14,z===.4?.09:.07],alloy,details,[-.69,.5,z]);pedal.rotation.z=.4
+  }
+  box([.1,.012,.16],alloy,details,[-.6,.378,.58])
   const seats=[]
   for(const sign of [-1,1]) {
     const seat=new THREE.Group();seat.position.set(.25,.39,sign*.39);details.add(seat)
     seats.push(seat)
-    const base=mesh(new THREE.CapsuleGeometry(.18,.22,8,20),upholstery,seat,[-.02,.06,0]);base.rotation.z=Math.PI/2;base.scale.set(1,.65,1)
-    const back=mesh(new THREE.CapsuleGeometry(.17,.22,8,20),upholstery,seat,[.25,.30,0]);back.scale.set(.5,1,1);back.rotation.z=-.12
+    const base=mesh(new THREE.CapsuleGeometry(.18,.22,8,20),seatLeather,seat,[-.02,.06,0]);base.rotation.z=Math.PI/2;base.scale.set(1,.65,1)
+    const back=mesh(new THREE.CapsuleGeometry(.17,.22,8,20),seatLeather,seat,[.25,.30,0]);back.scale.set(.5,1,1);back.rotation.z=-.12
     const insert=mesh(new THREE.CapsuleGeometry(.12,.15,6,16),carbon,seat,[.155,.29,0]);insert.scale.set(.14,1,1)
-    const head=mesh(new THREE.SphereGeometry(.13,24,16),upholstery,seat,[.27,.53,0]);head.scale.set(.6,.85,1)
+    const head=mesh(new THREE.SphereGeometry(.13,24,16),seatLeather,seat,[.27,.53,0]);head.scale.set(.6,.85,1)
     line([[.18,.18,-.15],[.21,.38,-.15],[.24,.47,-.1]],.006,carbon,seat)
   }
   line([[-.72,.735,-.69],[-.72,.735,0],[-.72,.735,.69]],.003,redLed,details)
@@ -239,6 +259,26 @@ export function createRoadster({createCanvas=()=>document.createElement('canvas'
   return {root,shell,details,wheels,wireMaterials,wireObjects,sections,exhaust,brakeLight,reverseLights,sectionMaterial,paint,glass,wheelCenters,doors,wing,plumeMaterial,liftPlumeMaterial,steering,screenTexture,screenSurface,driverScreens,seats}
 }
 
+function patternTexture(createCanvas,size,draw,repeat) {
+  const canvas=createCanvas();canvas.width=size;canvas.height=size
+  draw(canvas.getContext('2d'),size)
+  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(repeat,repeat)
+  return texture
+}
+function perforationTexture(createCanvas) {
+  return patternTexture(createCanvas,64,(ctx,size)=>{
+    ctx.fillStyle='#f2f3f4';ctx.fillRect(0,0,size,size)
+    ctx.fillStyle='#b0b5ba'
+    for(let row=0;row<8;row++)for(let col=0;col<8;col++)ctx.fillRect(col*8+(row%2)*4+2,row*8+2,2,2)
+  },8)
+}
+function weaveTexture(createCanvas) {
+  return patternTexture(createCanvas,32,(ctx,size)=>{
+    ctx.fillStyle='#d4d8dc';ctx.fillRect(0,0,size,size)
+    ctx.fillStyle='#7d848b'
+    for(let row=0;row<4;row++)for(let col=0;col<4;col++)if((row+col)%2===0)ctx.fillRect(col*8,row*8,8,8)
+  },8)
+}
 function createScreenTexture(createCanvas) {
   const canvas=createCanvas();canvas.width=512;canvas.height=288
   const ctx=canvas.getContext('2d');ctx.fillStyle='#080e15';ctx.fillRect(0,0,512,288)
