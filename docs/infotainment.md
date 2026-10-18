@@ -26,6 +26,8 @@ youtube usa la [iframe player api](https://developers.google.com/youtube/iframe_
 
 los archivos locales usan `url.createobjecturl` y un elemento de vídeo nativo, también válido para audio. se revoca la url al quitar o sustituir el archivo y al salir de la página. el volumen del pie controla el coche y los archivos locales; youtube conserva su propio control nativo.
 
+el brillo del panel atenúa la interfaz con una capa negra sin eventos de puntero, no con un filtro css sobre el árbol del reproductor. youtube, los archivos locales y las páginas incrustadas quedan por encima de esa capa y conservan su luminosidad original. esto evita someter vídeo acelerado a un grupo filtrado dentro del plano css3d. no se alteran los fotogramas ni se puede inspeccionar el vídeo de youtube desde otro origen.
+
 ## comprobaciones
 
 `npm test` cubre enlaces, direcciones inseguras, preferencias y dinámica. la verificación visual del monitor incluye carga y reproducción real de youtube sobre la superficie 3d, cambio de cámara y ausencia de hud flotante. el diseño anterior tenía una ventana ampliada y controles táctiles; las capturas antiguas se conservan como historial y no describen el modo de juego actual.
