@@ -1,7 +1,7 @@
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v))
 
 export function createVehicleAudio(onChange=()=>{}) {
-  let context,master,motor,wind,road,skid,enabled=false,driving=false,compressor
+  let context,master,motor,wind,road,skid,enabled=false,driving=false,compressor,level=.65
   const tones=[]
   function noiseBuffer() {
     const buffer=context.createBuffer(1,context.sampleRate*2,context.sampleRate),data=buffer.getChannelData(0)
@@ -27,7 +27,7 @@ export function createVehicleAudio(onChange=()=>{}) {
     const noise=noiseBuffer();wind=layer(noise,'lowpass',500);road=layer(noise,'bandpass',350,.6);skid=layer(noise,'bandpass',1150,2.5)
   }
   function volume() {
-    if(context)master.gain.setTargetAtTime(enabled&&!document.hidden?.65:0,context.currentTime,.15)
+    if(context)master.gain.setTargetAtTime(enabled&&!document.hidden?level:0,context.currentTime,.15)
     onChange(enabled)
   }
   async function setEnabled(value) {
@@ -58,5 +58,5 @@ export function createVehicleAudio(onChange=()=>{}) {
     oscillator.onended=()=>{oscillator.disconnect();gain.disconnect()}
   }
   document.addEventListener('visibilitychange',volume)
-  return {get enabled(){return enabled},setEnabled,toggle:()=>setEnabled(!enabled),setDriving(value){driving=value;update({speed:0,throttle:0,slip:0})},update,door}
+  return {get enabled(){return enabled},setEnabled,setVolume(value){level=clamp(value,0,1);volume()},toggle:()=>setEnabled(!enabled),setDriving(value){driving=value;update({speed:0,throttle:0,slip:0})},update,door}
 }
